@@ -16,5 +16,7 @@ parser = pg.get_parser()
 while True:
     code = input("animeLang > ")
     all_tokens = lexer.get_lexer().lex(code)
-    # print(parser.parse(all_tokens).eval())
     parser.parse(all_tokens).eval()
+    # for i in all_tokens:
+    #     print(i)
+    # print(parser.parse(all_tokens).eval())

@@ -1,5 +1,5 @@
 from rply import ParserGenerator
-from ast import Number, Add, Substract, Multiply, Divide, Print
+from ast import Integer, Float, Add, Substract, Multiply, Divide, S_expression, Print, Exit
 from tokens import TOKENS_DICT
 
 
@@ -10,9 +10,12 @@ class Parser():
                                               ('left', ['MULTIPLY', 'DIVIDE'])])
 
     def parse(self):
-
         @self.pg.production('program : PRINT expression LINE_END')
-        @self.pg.production('program : expression')
+        def program(p):
+            return Print(p[1])
+
+        # @self.pg.production('program : expression LINE_END')
+        @self.pg.production('program : expression')  # TODO: replace this line with above one
         def program(p):
             return Print(p[0])
 
@@ -40,9 +43,30 @@ class Parser():
                 raise AssertionError(
                     'B-Baakaa Baaaaaaaaaaaaaaka you made a mistake Baaaaka.')
 
-        @self.pg.production('expression : NUMBER')
+        @self.pg.production('expression : INTEGER')
+        @self.pg.production('expression : FLOAT')
+        # @self.pg.production('expression : s_expression')
         def expression_number(p):
-            return Number(p[0].value)
+            if p[0].gettokentype() == 'FLOAT':
+                return Float(p[0].value)
+            elif p[0].gettokentype() == 'INTEGER':
+                return Integer(p[0].value)
+            elif p[0].gettokentype() == 's_expression':
+                return p[0]
+
+        # @self.pg.production('s_expression: S_OPEN_PAREN expression S_CLOSE_PAREN')
+        # def s_expression_type(p):
+        #     return S_expression(p[1])
+
+        @self.pg.production('expression : CLOSE')
+        def expression_number(p):
+            return Exit()
+
+        ######## ERROR Handling - UwU ########
+
+        @self.pg.error
+        def error_handler(token):
+            raise ValueError("Ran into a %s where it wasn't expected" % token.gettokentype())
 
     def get_parser(self):
         return self.pg.build()
