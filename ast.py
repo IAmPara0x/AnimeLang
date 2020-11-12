@@ -43,12 +43,19 @@ class Divide(BinaryOp):
         return self.left.eval() / self.right.eval()
 
 
-class S_expression():
+class List_type():
     def __init__(self):
         self.value = []
+        self.is_index = False
+        self.index = None
 
     def eval(self):
+        if self.is_index:
+            return self.get_index()
         return self.value
+
+    def get_index(self):
+        return self.value[self.index]
 
 
 class Print():
@@ -61,5 +68,5 @@ class Print():
 
 class Exit:
     def eval(self):
-        print("B-Bye senpaii i will miss you "meow". UwU")
+        print("What did you thought that i would get upset? It's not that i like you b-baaka. *Tsun*")
         quit()

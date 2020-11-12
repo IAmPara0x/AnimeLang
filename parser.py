@@ -1,11 +1,10 @@
 from rply import ParserGenerator
-from ast import Integer, Float, Add, Substract, Multiply, Divide, S_expression, Print, Exit
+from ast import Integer, Float, Add, Substract, Multiply, Divide, List_type, Print, Exit
 from tokens import TOKENS_DICT
 
 
 class Parser():
     def __init__(self):
-        self.new_list = S_expression()  # TODO: need to add a proper way to store list and to reduce time complexity
         self.pg = ParserGenerator([token_name for token_name in TOKENS_DICT.keys()],
                                   precedence=[('left', ['ADD', 'SUBSTRACT']),
                                               ('left', ['MULTIPLY', 'DIVIDE'])])
@@ -18,7 +17,8 @@ class Parser():
             return Print(p[1])
 
         # @self.pg.production('program : expression LINE_END')
-        @self.pg.production('program : expression')  # TODO: replace this line with above one
+        # TODO: replace this line with above one
+        @self.pg.production('program : expression')
         def program(p):
             return Print(p[0])
 
@@ -57,25 +57,31 @@ class Parser():
                 return Integer(p[0].value)
 
         ######## GRAMMAR FOR LISTS ########
+
         @self.pg.production('expression : s_expression')
         def new_list_type(p):
-            self.new_list = S_expression()
             return p[0]
 
         @self.pg.production('s_expression : S_OPEN_PAREN expression')
-        def list_begin(p):
+        def list_end(p):
             return p[1]
 
         @self.pg.production('expression : expression  expression')
         def list_parse(p):
-            self.new_list.value.insert(0, p[0].eval())
+            p[1].value.insert(0, p[0].eval())
             return p[1]
 
         @self.pg.production('expression : expression  S_CLOSE_PAREN')
-        def list_end(p):
-            self.new_list.value.insert(0, p[0].eval())
-            return self.new_list
+        def list_begin(p):
+            new_list = List_type()
+            new_list.value.insert(0, p[0].eval())
+            return new_list
 
+        @self.pg.production('expression : INDEX_W C_OPEN_PAREN expression C_CLOSE_PAREN s_expression')
+        def get_list_index(p):
+            p[4].is_index = True
+            p[4].index = p[2].eval()
+            return p[4]
 
         ######## GRAMMAR FOR EXIT ########
         @self.pg.production('expression : CLOSE')
@@ -86,7 +92,8 @@ class Parser():
 
         @self.pg.error
         def error_handler(token):
-            raise ValueError("Ran into a %s where it wasn't expected" % token.gettokentype())
+            raise ValueError(
+                "Ran into a %s where it wasn't expected" % token.gettokentype())
 
     def get_parser(self):
         return self.pg.build()
