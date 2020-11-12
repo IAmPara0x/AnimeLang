@@ -44,11 +44,11 @@ class Divide(BinaryOp):
 
 
 class S_expression():
-    def __init__(self, value):
-        self.value = value
+    def __init__(self):
+        self.value = []
 
     def eval(self):
-        return self.value.eval()
+        return self.value
 
 
 class Print():
@@ -61,5 +61,5 @@ class Print():
 
 class Exit:
     def eval(self):
-        print("Exiting . . .")
+        print("B-Bye senpaii i will miss you "meow". UwU")
         quit()
