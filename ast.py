@@ -63,10 +63,10 @@ class Print():
         self.value = value
 
     def eval(self):
-        print(self.value.eval())
+        return self.value.eval()
 
 
 class Exit:
     def eval(self):
-        print("What did you thought that i would get upset? It's not that i like you b-baaka. *Tsun*")
+        print("What did you thought that i would get upset? It's not that i like you b-baaka. *Hmph*")
         quit()

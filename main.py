@@ -1,3 +1,4 @@
+import sys
 from lexer import Lexer
 from tokens import TOKENS_DICT
 from parser import Parser
@@ -11,12 +12,20 @@ pg = Parser()
 pg.parse()
 parser = pg.get_parser()
 
-# Main loop for getting input
 
-while True:
-    code = input("animeLang > ")
-    all_tokens = lexer.get_lexer().lex(code)
-    parser.parse(all_tokens).eval()
-    # for i in all_tokens:
-    #     print(i)
-    # print(parser.parse(all_tokens).eval())
+if __name__ == "__main__":
+
+    if len(sys.argv) == 2 and sys.argv[1] == "--tests":
+        # importing tests
+        import unittest
+        from tests.test_animeLang import *
+        unittest.main()
+    else:
+        # Main loop for getting input
+        while True:
+            code = input("animeLang > ")
+            all_tokens = lexer.get_lexer().lex(code)
+            print(parser.parse(all_tokens).eval())
+            # for i in all_tokens:
+            #     print(i)
+            # print(parser.parse(all_tokens).eval())
