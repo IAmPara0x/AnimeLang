@@ -43,6 +43,7 @@ class Divide(BinaryOp):
         return self.left.eval() / self.right.eval()
 
 
+# class for lists
 class List_type():
     def __init__(self):
         self.value = []
@@ -64,6 +65,29 @@ class Print():
 
     def eval(self):
         return self.value.eval()
+
+
+# class for variable
+class Variable_type():
+    def __init__(self, name, type, value):
+        self.name = name
+        self.value = value
+        self.type = type
+
+    def eval(self):
+        return self.value
+
+
+# class to store all the variables
+class Variables_dict():
+    def __init__(self):
+        self.variables_dict = {}
+
+    def add_variable(self, name: str, variable):
+        self.variables_dict[name] = variable
+
+    def get_variable(self, name: str):
+        return self.variables_dict[name]
 
 
 class Exit:

@@ -1,5 +1,5 @@
 from rply import ParserGenerator
-from ast import Integer, Float, Add, Substract, Multiply, Divide, List_type, Print, Exit
+from ast import Integer, Float, Add, Substract, Multiply, Divide, List_type, Variable_type, Variables_dict, Print, Exit
 from tokens import TOKENS_DICT
 
 
@@ -8,6 +8,8 @@ class Parser():
         self.pg = ParserGenerator([token_name for token_name in TOKENS_DICT.keys()],
                                   precedence=[('left', ['ADD', 'SUBSTRACT']),
                                               ('left', ['MULTIPLY', 'DIVIDE'])])
+
+        self.variables_dict = Variables_dict()  # stores all the variables
 
     def parse(self):
 
@@ -23,6 +25,7 @@ class Parser():
             return Print(p[0])
 
         ######## GRAMMAR FOR BASIC ARITHMETIC CALCULATIONS ########
+
         @self.pg.production('expression : OPEN_PAREN expression CLOSE_PAREN')
         def expression_parens(p):
             return p[1]
@@ -48,6 +51,7 @@ class Parser():
                     'B-Baakaa Baaaaaaaaaaaaaaka you made a mistake Baaaaka.')
 
         ########  GRAMMA FOR BASIC DATATYPES ########
+
         @self.pg.production('expression : INTEGER')
         @self.pg.production('expression : FLOAT')
         def expression_number(p):
@@ -58,26 +62,31 @@ class Parser():
 
         ######## GRAMMAR FOR LISTS ########
 
-        @self.pg.production('expression : s_expression')
+        # returns the list created
+        @self.pg.production('expression : l_expression')
         def new_list_type(p):
             return p[0]
 
-        @self.pg.production('s_expression : S_OPEN_PAREN expression')
+        # parsing of the list ends here
+        @self.pg.production('l_expression : S_OPEN_PAREN expression')
         def list_end(p):
             return p[1]
 
+        # parses all the elements insides the list
         @self.pg.production('expression : expression COMMA expression')
         def list_parse(p):
             p[2].value.insert(0, p[0].eval())
             return p[2]
 
+        # parsing of the created list begins here
         @self.pg.production('expression : expression S_CLOSE_PAREN')
         def list_begin(p):
             new_list = List_type()
             new_list.value.insert(0, p[0].eval())
             return new_list
 
-        @self.pg.production('expression : INDEX_W C_OPEN_PAREN expression C_CLOSE_PAREN s_expression')
+        # gets the element from the list given index number
+        @self.pg.production('expression : INDEX_W C_OPEN_PAREN expression C_CLOSE_PAREN l_expression')
         def get_list_index(p):
             p[4].is_index = True
             p[4].index = p[2].eval()
@@ -85,14 +94,48 @@ class Parser():
 
        #### GRAMMAR FOR VARIABLES ####
 
-       # TODO: complete the viables features
-        @self.pg.production('expression : VARIABLE')
-        def list_begin(p):
+        # return the value of the variable
+        @self.pg.production('expression : n_expression')
+        def return_variable(p):
+            name = p[0].value
+            return self.variables_dict.get_variable(name)
+
+        # returns the name of the variable
+        @self.pg.production('n_expression : VARIABLE')
+        def variable_name(p):
             return p[0]
 
-        @self.pg.production('expression : NEW C_INTEGER expression EQUALS INTEGER')
+        # returns the calculated value of the variable
+        @self.pg.production('v_expression : EQUALS expression LINE_END')
+        def variable_value(p):
+            return p[1]
+
+        @self.pg.production('expression : NEW C_INTEGER n_expression v_expression')
         def variable_int(p):
-            return Integer(p[-1].value)
+            name = p[2].value
+            value = Integer(p[-1].eval()).eval()
+            type = "INTEGER"
+            variable = Variable_type(name, type, value)
+            self.variables_dict.add_variable(name, variable)
+            return variable
+
+        @self.pg.production('expression : NEW C_FLOAT n_expression v_expression')
+        def variable_float(p):
+            name = p[2].value
+            value = Float(p[-1].eval()).eval()
+            type = "FLOAT"
+            variable = Variable_type(name, type, value)
+            self.variables_dict.add_variable(name, variable)
+            return variable
+
+        @self.pg.production('expression : NEW C_LIST n_expression v_expression')
+        def variable_float(p):
+            name = p[2].value
+            value = p[-1].eval()
+            type = "FLOAT"
+            variable = Variable_type(name, type, value)
+            self.variables_dict.add_variable(name, variable)
+            return variable
 
         ######## GRAMMAR FOR EXIT ########
 
