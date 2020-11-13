@@ -66,12 +66,12 @@ class Parser():
         def list_end(p):
             return p[1]
 
-        @self.pg.production('expression : expression  expression')
+        @self.pg.production('expression : expression COMMA expression')
         def list_parse(p):
-            p[1].value.insert(0, p[0].eval())
-            return p[1]
+            p[2].value.insert(0, p[0].eval())
+            return p[2]
 
-        @self.pg.production('expression : expression  S_CLOSE_PAREN')
+        @self.pg.production('expression : expression S_CLOSE_PAREN')
         def list_begin(p):
             new_list = List_type()
             new_list.value.insert(0, p[0].eval())
@@ -83,7 +83,19 @@ class Parser():
             p[4].index = p[2].eval()
             return p[4]
 
+       #### GRAMMAR FOR VARIABLES ####
+
+       # TODO: complete the viables features
+        @self.pg.production('expression : VARIABLE')
+        def list_begin(p):
+            return p[0]
+
+        @self.pg.production('expression : NEW C_INTEGER expression EQUALS INTEGER')
+        def variable_int(p):
+            return Integer(p[-1].value)
+
         ######## GRAMMAR FOR EXIT ########
+
         @self.pg.production('expression : CLOSE')
         def expression_number(p):
             return Exit()
