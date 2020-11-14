@@ -86,7 +86,7 @@ class Parser():
             return new_list
 
         # gets the element from the list given index number
-        @self.pg.production('expression : INDEX_W C_OPEN_PAREN expression C_CLOSE_PAREN l_expression')
+        @self.pg.production('expression : INDEX_W C_OPEN_PAREN expression C_CLOSE_PAREN expression')
         def get_list_index(p):
             p[4].is_index = True
             p[4].index = p[2].eval()
@@ -129,10 +129,10 @@ class Parser():
             return variable
 
         @self.pg.production('expression : NEW C_LIST n_expression v_expression')
-        def variable_float(p):
+        def variable_list(p):
             name = p[2].value
             value = p[-1].eval()
-            type = "FLOAT"
+            type = "LIST"
             variable = Variable_type(name, type, value)
             self.variables_dict.add_variable(name, variable)
             return variable

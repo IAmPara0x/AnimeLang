@@ -56,6 +56,7 @@ class List_type():
         return self.value
 
     def get_index(self):
+        self.is_index = False
         return self.value[self.index]
 
 
@@ -73,8 +74,19 @@ class Variable_type():
         self.name = name
         self.value = value
         self.type = type
+        if self.type == "LIST":
+            self.is_index = False
+            self.index = None
 
     def eval(self):
+        if self.type == "LIST":
+            return self.leval()
+        return self.value
+
+    def leval(self):
+        if self.is_index:
+            self.is_index = False
+            return self.value[self.index]
         return self.value
 
 
