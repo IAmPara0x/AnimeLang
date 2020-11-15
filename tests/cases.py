@@ -28,12 +28,13 @@ ARITHMETIC_TESTCASE_DICT["calc_testcase_4"] = [
 
 VARIABLE_TESTCASE_DICT = {}
 
-VARIABLE_TESTCASE_DICT["var_testcase_1"] = ["new tsundere touka = 10 meow", 10]
+VARIABLE_TESTCASE_DICT["var_testcase_1"] = ["new tsundere touka = 10", 10]
 VARIABLE_TESTCASE_DICT["var_testcase_2"] = ["touka*10", 100]
-VARIABLE_TESTCASE_DICT["var_testcase_3"] = ["new yandere yuno = 11 meow", 11]
+VARIABLE_TESTCASE_DICT["var_testcase_3"] = ["new yandere yuno = 11", 11]
 VARIABLE_TESTCASE_DICT["var_testcase_4"] = ["yuno*touka", 110]
 VARIABLE_TESTCASE_DICT["var_testcase_5"] = ["yuno*touka+yuno/touka", 111.1]
-VARIABLE_TESTCASE_DICT["var_testcase_6"] = ["new harem ki = [touka, yuno, 13] meow", [10,11,13]]
+VARIABLE_TESTCASE_DICT["var_testcase_6"] = ["new harem ki = [touka, yuno, 13]", [10,11,13]]
 VARIABLE_TESTCASE_DICT["var_testcase_7"] = ["waifu {0} ki", 10]
 VARIABLE_TESTCASE_DICT["var_testcase_7"] = ["ki", [10,11,13]]
 VARIABLE_TESTCASE_DICT["var_testcase_8"] = ["waifu {1 + 0} ki", 11]
+VARIABLE_TESTCASE_DICT["var_testcase_9"] = ["( waifu {1 + 0} ki ) * 10", 110]

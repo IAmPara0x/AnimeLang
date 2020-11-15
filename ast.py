@@ -89,7 +89,6 @@ class Variable_type():
             return self.value[self.index]
         return self.value
 
-
 # class to store all the variables
 class Variables_dict():
     def __init__(self):
@@ -100,6 +99,37 @@ class Variables_dict():
 
     def get_variable(self, name: str):
         return self.variables_dict[name]
+
+# class for conditionals
+class Booleans():
+    def __init__(self, value):
+        self.value = value
+
+    def eval(self):
+        return self.value
+
+class Check():
+    def __init__(self, val1, val2):
+        self.val1 = val1
+        self.val2 = val2
+
+    def eval(self):
+        if self.val1.eval() == self.val2.eval():
+            return "kawai"
+        else:
+            return "baaka"
+
+
+class Eval_expressions():
+    def __init__(self):
+        self.expressions = []
+
+    def add_expression(self,expression):
+        self.expressions.append(expression)
+
+    def eval(self):
+        for i in self.expressions:
+            i.eval()
 
 
 class Exit:

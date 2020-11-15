@@ -1,5 +1,5 @@
 from rply import ParserGenerator
-from ast import Integer, Float, Add, Substract, Multiply, Divide, List_type, Variable_type, Variables_dict, Print, Exit
+from ast import Integer, Float, Add, Substract, Multiply, Divide, Eval_expressions, List_type, Variable_type, Variables_dict, Booleans, Check, Print, Exit
 from tokens import TOKENS_DICT
 
 
@@ -10,6 +10,7 @@ class Parser():
                                               ('left', ['MULTIPLY', 'DIVIDE'])])
 
         self.variables_dict = Variables_dict()  # stores all the variables
+        self.eval_expressions_buffer = None
 
     def parse(self):
 
@@ -106,7 +107,7 @@ class Parser():
             return p[0]
 
         # returns the calculated value of the variable
-        @self.pg.production('v_expression : EQUALS expression LINE_END')
+        @self.pg.production('v_expression : EQUALS expression')
         def variable_value(p):
             return p[1]
 
@@ -137,10 +138,60 @@ class Parser():
             self.variables_dict.add_variable(name, variable)
             return variable
 
+        @self.pg.production('expression : NEW C_BOOL n_expression v_expression')
+        def variable_list(p):
+            name = p[2].value
+            value = p[-1].eval()
+            type = "BOOL"
+            variable = Variable_type(name, type, value)
+            self.variables_dict.add_variable(name, variable)
+            return variable
+
+        #### GRAMMAR FOR CONDITIONALS ####
+
+        @self.pg.production('expression : b_expression')
+        def booleans_expression(p):
+            return p[0]
+
+        @self.pg.production('b_expression : TRUE')
+        @self.pg.production('b_expression : FALSE')
+        def booleans(p):
+            return Booleans(p[0].value)
+
+        @self.pg.production('e_expression : expression LINE_END C_CLOSE_PAREN')
+        def eval_expressions_begin(p):
+            self.eval_expressions_buffer = Eval_expressions()
+            self.eval_expressions_buffer.add_expression(p[0])
+            return p[0]
+
+        @self.pg.production('e_expression : expression LINE_END e_expression')
+        def eval_expressions_parse(p):
+            self.eval_expressions_buffer.add_expression(p[0])
+            return p[0]
+
+        @self.pg.production('e_expression : C_OPEN_PAREN e_expression')
+        def eval_expressions_end(p):
+            return p[1]
+
+        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN')
+        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN e_expression')
+        def conditional_check(p):
+            if len(p) == 6:
+                return Check(p[2], p[4])
+            elif len(p) == 7:
+                cond = Check(p[2], p[4])
+                val = cond.eval()
+                if val == "kawai":
+                    p[-1].eval()
+                    self.eval_expressions_buffer = None
+                else:
+                    self.eval_expressions_buffer = None
+                return Check(p[2], p[4])
+
         ######## GRAMMAR FOR EXIT ########
 
         @self.pg.production('expression : CLOSE')
-        def expression_number(p):
+        def expression_close(p):
             return Exit()
 
         ######## ERROR Handling - UwU ########
