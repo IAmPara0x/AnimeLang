@@ -92,13 +92,13 @@ class Variable_type():
 # class to store all the variables
 class Variables_dict():
     def __init__(self):
-        self.variables_dict = {}
+        self.dict = {}
 
     def add_variable(self, name: str, variable):
-        self.variables_dict[name] = variable
+        self.dict[name] = variable
 
     def get_variable(self, name: str):
-        return self.variables_dict[name]
+        return self.dict[name]
 
 # class for conditionals
 class Booleans():
@@ -120,16 +120,54 @@ class Check():
             return "baaka"
 
 
-class Eval_expressions():
+# class for e_expression
+class Variable_buffer():
+    def __init__(self, variable_name, value, type=None, action="create"):
+        self.action = action
+        self.name = variable_name
+        self.value = value
+        if self.action == "create":
+            self.type = type
+
+    def eval(self, variables_dict):
+        if self.action == "create":
+            if self.type == "INTEGER":
+                self.value = int(self.value.eval())
+            if self.type == "FLOAT":
+                self.value = float(self.value.eval())
+            variable = Variable_type(self.name, self.type, self.value)
+            variables_dict[self.name] = variable
+        if self.action == "change":
+            variables_dict[self.name].value = self.value.eval()
+        return variables_dict
+
+
+class Eval_expressions_buffer():
     def __init__(self):
         self.expressions = []
 
     def add_expression(self,expression):
         self.expressions.append(expression)
 
-    def eval(self):
+    def eval(self, variables_dict):
+        self.variables_dict = variables_dict
         for i in self.expressions:
-            i.eval()
+            self.variables_dict = i.eval(variables_dict)
+        return self.variables_dict
+
+class E_expressions_list():
+    def __init__(self):
+        self.e_expressions_list = []
+
+    def add_e_expression(self, e_expression: Eval_expressions_buffer):
+        self.e_expressions_list.append(e_expression)
+
+    def get_e_expression(self):
+        return self.e_expressions_list.pop(0)
+
+    @property
+    def len(self):
+        return len(self.e_expressions_list)
 
 
 class Exit:

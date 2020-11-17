@@ -1,5 +1,22 @@
 from rply import ParserGenerator
-from ast import Integer, Float, Add, Substract, Multiply, Divide, Eval_expressions, List_type, Variable_type, Variables_dict, Booleans, Check, Print, Exit
+from ast import (
+    Integer,
+    Float,
+    Add,
+    Substract,
+    Multiply,
+    Divide,
+    Variable_buffer,
+    Eval_expressions_buffer,
+    E_expressions_list,
+    List_type,
+    Variable_type,
+    Variables_dict,
+    Booleans,
+    Check,
+    Print,
+    Exit
+)
 from tokens import TOKENS_DICT
 
 
@@ -10,7 +27,8 @@ class Parser():
                                               ('left', ['MULTIPLY', 'DIVIDE'])])
 
         self.variables_dict = Variables_dict()  # stores all the variables
-        self.eval_expressions_buffer = None
+        self.local_scope = None
+        self.local_scope_expressions_buffer = None
 
     def parse(self):
 
@@ -87,7 +105,7 @@ class Parser():
             return new_list
 
         # gets the element from the list given index number
-        @self.pg.production('expression : INDEX_W C_OPEN_PAREN expression C_CLOSE_PAREN expression')
+        @self.pg.production('expression : INDEX_W BAR expression BAR expression')
         def get_list_index(p):
             p[4].is_index = True
             p[4].index = p[2].eval()
@@ -107,11 +125,11 @@ class Parser():
             return p[0]
 
         # returns the calculated value of the variable
-        @self.pg.production('v_expression : EQUALS expression')
+        @self.pg.production('v_expression : EQUALS expression LINE_END')
         def variable_value(p):
             return p[1]
 
-        @self.pg.production('expression : NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('l_expression : NEW C_INTEGER n_expression v_expression')
         def variable_int(p):
             name = p[2].value
             value = Integer(p[-1].eval()).eval()
@@ -120,7 +138,7 @@ class Parser():
             self.variables_dict.add_variable(name, variable)
             return variable
 
-        @self.pg.production('expression : NEW C_FLOAT n_expression v_expression')
+        @self.pg.production('l_expression : NEW C_FLOAT n_expression v_expression')
         def variable_float(p):
             name = p[2].value
             value = Float(p[-1].eval()).eval()
@@ -129,7 +147,7 @@ class Parser():
             self.variables_dict.add_variable(name, variable)
             return variable
 
-        @self.pg.production('expression : NEW C_LIST n_expression v_expression')
+        @self.pg.production('l_expression : NEW C_LIST n_expression v_expression')
         def variable_list(p):
             name = p[2].value
             value = p[-1].eval()
@@ -138,14 +156,23 @@ class Parser():
             self.variables_dict.add_variable(name, variable)
             return variable
 
-        @self.pg.production('expression : NEW C_BOOL n_expression v_expression')
-        def variable_list(p):
+        @self.pg.production('l_expression : NEW C_BOOL n_expression v_expression')
+        def variable_bool(p):
             name = p[2].value
             value = p[-1].eval()
             type = "BOOL"
             variable = Variable_type(name, type, value)
             self.variables_dict.add_variable(name, variable)
             return variable
+
+        @self.pg.production('l_expression : INDEX_W n_expression v_expression')
+        def change_variable_value(p):
+            name = p[1].value
+            value = p[-1].eval()
+            var = self.variables_dict.get_variable(name)
+            var.value = value
+            return var
+
 
         #### GRAMMAR FOR CONDITIONALS ####
 
@@ -158,23 +185,9 @@ class Parser():
         def booleans(p):
             return Booleans(p[0].value)
 
-        @self.pg.production('e_expression : expression LINE_END C_CLOSE_PAREN')
-        def eval_expressions_begin(p):
-            self.eval_expressions_buffer = Eval_expressions()
-            self.eval_expressions_buffer.add_expression(p[0])
-            return p[0]
-
-        @self.pg.production('e_expression : expression LINE_END e_expression')
-        def eval_expressions_parse(p):
-            self.eval_expressions_buffer.add_expression(p[0])
-            return p[0]
-
-        @self.pg.production('e_expression : C_OPEN_PAREN e_expression')
-        def eval_expressions_end(p):
-            return p[1]
-
         @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN')
-        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN e_expression')
+        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN local_scope_end')
+        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN scope_end ELSE local_scope_end')
         def conditional_check(p):
             if len(p) == 6:
                 return Check(p[2], p[4])
@@ -182,11 +195,61 @@ class Parser():
                 cond = Check(p[2], p[4])
                 val = cond.eval()
                 if val == "kawai":
-                    p[-1].eval()
-                    self.eval_expressions_buffer = None
+                    e_expression = self.local_scope.get_e_expression()
+                    self.variables_dict.dict = e_expression.eval(self.variables_dict.dict)
+                    if self.local_scope.len == 0:
+                        self.local_scope = None
                 else:
-                    self.eval_expressions_buffer = None
+                    self.local_scope.get_e_expression()
+                    if self.local_scope.len == 0:
+                        self.local_scope = None
+                return cond
+            elif len(p) == 9:
+                cond = Check(p[2], p[4])
+                val = cond.eval()
+                if val == "kawai":
+                    e_expression = self.local_scope.get_e_expression()
+                    self.variables_dict.dict = e_expression.eval(self.variables_dict.dict)
+                    self.local_scope.get_e_expression()
+                    if self.local_scope.len == 0:
+                        self.local_scope = None
+                else:
+                    self.local_scope.get_e_expression()
+                    e_expression = self.local_scope.get_e_expression()
+                    self.variables_dict.dict = e_expression.eval(self.variables_dict.dict)
+                    if self.local_scope.len == 0:
+                        self.local_scope = None
+
                 return Check(p[2], p[4])
+
+        #### GRAMMAR for e_expressions ####
+
+        @self.pg.production('local_scope_l_expression : local_scope NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('local_scope_l_expression : local_scope_l_expression NEW C_INTEGER n_expression v_expression')
+        def local_scope_variable_int(p):
+            name = p[3].value
+            value = p[-1]
+            type = "INTEGER"
+            buffer = Variable_buffer(name, value, type)
+            self.local_scope_expressions_buffer.add_expression(buffer)
+            return buffer
+
+        @self.pg.production('local_scope : C_OPEN_PAREN')
+        def local_scope_expressions_begin(p):
+            if self.local_scope is None:
+                self.local_scope = E_expressions_list()
+            self.local_scope_expressions_buffer = Eval_expressions_buffer()
+            return p[0]
+
+        @self.pg.production('scope_end : local_scope_l_expression C_CLOSE_PAREN')
+        def scope_end(p):
+            self.local_scope.add_e_expression(self.local_scope_expressions_buffer)
+            return p[0]
+
+        @self.pg.production('local_scope_end : local_scope_l_expression C_CLOSE_PAREN LINE_END')
+        def local_scope_expressions_end(p):
+            self.local_scope.add_e_expression(self.local_scope_expressions_buffer)
+            return p[0]
 
         ######## GRAMMAR FOR EXIT ########
 
