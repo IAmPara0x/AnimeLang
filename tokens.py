@@ -34,10 +34,11 @@ TOKENS_DICT["LINE_END"] = r'meow'
 TOKENS_DICT["BAR"] = r'\|'
 
 # Keywords for conditionals
-TOKENS_DICT["CHECK"] = r'can_ship'
+TOKENS_DICT["CHECK"] = r'create_ship'
 TOKENS_DICT["ELSE"] = r'nani'
 TOKENS_DICT["TRUE"] = r'kawai'
 TOKENS_DICT["FALSE"] = r'baaka'
+TOKENS_DICT["IS_EQUALS"] = r'X'
 
 TOKENS_DICT["PRINT"] = r'moshi_moshi'
 TOKENS_DICT["CLOSE"] = r'.exit'

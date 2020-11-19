@@ -6,14 +6,15 @@ from ast import (
     Substract,
     Multiply,
     Divide,
-    Variable_buffer,
-    Eval_expressions_buffer,
-    E_expressions_list,
+    Variable_buffer, # this class will be used while making functions
+    Eval_expressions_buffer, # this class will be used while making functions
+    E_expressions_list, # this class will be used while making functions
     List_type,
     Variable_type,
     Variables_dict,
     Booleans,
-    Check,
+    Check_if,
+    Check_else,
     Print,
     Exit
 )
@@ -27,8 +28,7 @@ class Parser():
                                               ('left', ['MULTIPLY', 'DIVIDE'])])
 
         self.variables_dict = Variables_dict()  # stores all the variables
-        self.local_scope = None
-        self.local_scope_expressions_buffer = None
+        self.global_nested_level = 0 #TODO: improve the way to store global_nested_level
 
     def parse(self):
 
@@ -82,12 +82,12 @@ class Parser():
         ######## GRAMMAR FOR LISTS ########
 
         # returns the list created
-        @self.pg.production('expression : l_expression')
+        @self.pg.production('expression : list_expression')
         def new_list_type(p):
             return p[0]
 
         # parsing of the list ends here
-        @self.pg.production('l_expression : S_OPEN_PAREN expression')
+        @self.pg.production('list_expression : S_OPEN_PAREN expression')
         def list_end(p):
             return p[1]
 
@@ -129,50 +129,124 @@ class Parser():
         def variable_value(p):
             return p[1]
 
-        @self.pg.production('l_expression : NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('line_expression : NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_INTEGER n_expression v_expression')
         def variable_int(p):
-            name = p[2].value
-            value = Integer(p[-1].eval()).eval()
-            type = "INTEGER"
-            variable = Variable_type(name, type, value)
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            # check if condtional local scope
+            if len(p) == 5:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    name = p[3].value
+                    value = Integer(p[-1].eval()).eval()
+                    type = "INTEGER"
+                    variable = Variable_type(name, type, value)
+                    self.variables_dict.add_variable(name, variable)
+                    return p[0]
 
-        @self.pg.production('l_expression : NEW C_FLOAT n_expression v_expression')
+            elif len(p) == 4:
+                name = p[2].value
+                value = Integer(p[-1].eval()).eval()
+                type = "INTEGER"
+                variable = Variable_type(name, type, value)
+                self.variables_dict.add_variable(name, variable)
+                return variable
+
+        @self.pg.production('line_expression : NEW C_FLOAT n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_FLOAT n_expression v_expression')
         def variable_float(p):
-            name = p[2].value
-            value = Float(p[-1].eval()).eval()
-            type = "FLOAT"
-            variable = Variable_type(name, type, value)
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            if len(p) == 5:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    name = p[3].value
+                    value = Float(p[-1].eval()).eval()
+                    type = "FLOAT"
+                    variable = Variable_type(name, type, value)
+                    self.variables_dict.add_variable(name, variable)
+                    return p[0]
+            elif len(p) == 4:
+                name = p[2].value
+                value = Float(p[-1].eval()).eval()
+                type = "FLOAT"
+                variable = Variable_type(name, type, value)
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
-        @self.pg.production('l_expression : NEW C_LIST n_expression v_expression')
+        @self.pg.production('line_expression : NEW C_LIST n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_LIST n_expression v_expression')
         def variable_list(p):
-            name = p[2].value
-            value = p[-1].eval()
-            type = "LIST"
-            variable = Variable_type(name, type, value)
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            if len(p) == 5:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    name = p[3].value
+                    value = p[-1].eval()
+                    type = "LIST"
+                    variable = Variable_type(name, type, value)
+                    self.variables_dict.add_variable(name, variable)
+                    return p[0]
+            elif len(p) == 4:
+                name = p[2].value
+                value = p[-1].eval()
+                type = "LIST"
+                variable = Variable_type(name, type, value)
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
-        @self.pg.production('l_expression : NEW C_BOOL n_expression v_expression')
+        @self.pg.production('line_expression : NEW C_BOOL n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_BOOL n_expression v_expression')
         def variable_bool(p):
-            name = p[2].value
-            value = p[-1].eval()
-            type = "BOOL"
-            variable = Variable_type(name, type, value)
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            if len(p) == 5:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    name = p[3].value
+                    value = p[-1].eval()
+                    type = "BOOL"
+                    variable = Variable_type(name, type, value)
+                    self.variables_dict.add_variable(name, variable)
+                    return p[0]
+            elif len(p) == 4:
+                name = p[2].value
+                value = p[-1].eval()
+                type = "BOOL"
+                variable = Variable_type(name, type, value)
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
-        @self.pg.production('l_expression : INDEX_W n_expression v_expression')
+        @self.pg.production('line_expression : INDEX_W n_expression v_expression')
+        @self.pg.production('line_expression : INDEX_W BAR expression BAR n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R INDEX_W n_expression v_expression')
         def change_variable_value(p):
-            name = p[1].value
-            value = p[-1].eval()
-            var = self.variables_dict.get_variable(name)
-            var.value = value
-            return var
+            if len(p) == 4:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    name = p[2].value
+                    value = p[-1].eval()
+                    var = self.variables_dict.get_variable(name)
+                    var.value = value
+                    return p[0]
+            elif len(p) == 3:
+                name = p[1].value
+                value = p[-1].eval()
+                var = self.variables_dict.get_variable(name)
+                var.value = value
+                return var
 
+            elif len(p) == 6:
+                name = p[4].value
+                index = p[2].eval()
+                value = p[-1].eval()
+                var = self.variables_dict.get_variable(name)
+                var.value[index] = value
+                return var
+
+        @self.pg.production('expression : line_expression')
+        def line_expression(p):
+            return p[0]
 
         #### GRAMMAR FOR CONDITIONALS ####
 
@@ -185,70 +259,50 @@ class Parser():
         def booleans(p):
             return Booleans(p[0].value)
 
-        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN')
-        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN local_scope_end')
-        @self.pg.production('expression : CHECK OPEN_PAREN expression COMMA expression CLOSE_PAREN scope_end ELSE local_scope_end')
+        @self.pg.production('CONDITIONAL_IF_R : CHECK OPEN_PAREN expression BAR IS_EQUALS BAR expression CLOSE_PAREN')
+        @self.pg.production('CONDITIONAL_IF_R : e_expression CHECK OPEN_PAREN expression BAR IS_EQUALS BAR expression CLOSE_PAREN')
+        @self.pg.production('CONDITIONAL_IF_R : e_expression  ELSE')
         def conditional_check(p):
-            if len(p) == 6:
-                return Check(p[2], p[4])
-            elif len(p) == 7:
-                cond = Check(p[2], p[4])
-                val = cond.eval()
-                if val == "kawai":
-                    e_expression = self.local_scope.get_e_expression()
-                    self.variables_dict.dict = e_expression.eval(self.variables_dict.dict)
-                    if self.local_scope.len == 0:
-                        self.local_scope = None
+            if len(p) == 8:
+                return Check_if(p[2], p[6])
+            elif len(p) == 2:
+                if self.global_nested_level == p[0].nested_level:
+                    return Check_else(p[0].val1, p[0].val2)
                 else:
-                    self.local_scope.get_e_expression()
-                    if self.local_scope.len == 0:
-                        self.local_scope = None
-                return cond
+                    return Check_else(p[0].parent.val1, p[0].parent.val2)
             elif len(p) == 9:
-                cond = Check(p[2], p[4])
-                val = cond.eval()
-                if val == "kawai":
-                    e_expression = self.local_scope.get_e_expression()
-                    self.variables_dict.dict = e_expression.eval(self.variables_dict.dict)
-                    self.local_scope.get_e_expression()
-                    if self.local_scope.len == 0:
-                        self.local_scope = None
-                else:
-                    self.local_scope.get_e_expression()
-                    e_expression = self.local_scope.get_e_expression()
-                    self.variables_dict.dict = e_expression.eval(self.variables_dict.dict)
-                    if self.local_scope.len == 0:
-                        self.local_scope = None
+                condtional = Check_if(p[3], p[7])
+                condtional.parent = p[0]
+                return condtional
 
-                return Check(p[2], p[4])
+        @self.pg.production('CONDITIONAL_IF_R : CONDITIONAL_IF_R C_OPEN_PAREN')
+        def begin_conditional_scope(p):
+            if not isinstance(p[0], Check_else):
+                self.global_nested_level += 1
+                p[0].nested_level = self.global_nested_level
+            else:
+                p[0].nested_level = self.global_nested_level
+            return p[0]
+
+        @self.pg.production('e_expression : e_expression C_CLOSE_PAREN LINE_END')
+        @self.pg.production('e_expression : e_expression C_CLOSE_PAREN')
+        def end_conditional_scope(p):
+            if len(p) == 3:
+                self.global_nested_level -= 1
+            return p[0]
+
+        @self.pg.production('expression : CONDITIONAL_IF_R ')
+        @self.pg.production('expression : e_expression ')
+        def conditional_result(p):
+            return p[0]
 
         #### GRAMMAR for e_expressions ####
 
-        @self.pg.production('local_scope_l_expression : local_scope NEW C_INTEGER n_expression v_expression')
-        @self.pg.production('local_scope_l_expression : local_scope_l_expression NEW C_INTEGER n_expression v_expression')
-        def local_scope_variable_int(p):
-            name = p[3].value
-            value = p[-1]
-            type = "INTEGER"
-            buffer = Variable_buffer(name, value, type)
-            self.local_scope_expressions_buffer.add_expression(buffer)
-            return buffer
-
-        @self.pg.production('local_scope : C_OPEN_PAREN')
-        def local_scope_expressions_begin(p):
-            if self.local_scope is None:
-                self.local_scope = E_expressions_list()
-            self.local_scope_expressions_buffer = Eval_expressions_buffer()
-            return p[0]
-
-        @self.pg.production('scope_end : local_scope_l_expression C_CLOSE_PAREN')
-        def scope_end(p):
-            self.local_scope.add_e_expression(self.local_scope_expressions_buffer)
-            return p[0]
-
-        @self.pg.production('local_scope_end : local_scope_l_expression C_CLOSE_PAREN LINE_END')
-        def local_scope_expressions_end(p):
-            self.local_scope.add_e_expression(self.local_scope_expressions_buffer)
+        @self.pg.production('e_expression : line_expression')
+        @self.pg.production('e_expression : e_expression line_expression')
+        def get_e_expression(p):
+            if len(p) == 2:
+                return p[0]
             return p[0]
 
         ######## GRAMMAR FOR EXIT ########

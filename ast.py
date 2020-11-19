@@ -108,16 +108,32 @@ class Booleans():
     def eval(self):
         return self.value
 
-class Check():
+class Check_if():
     def __init__(self, val1, val2):
         self.val1 = val1
         self.val2 = val2
+        self.nested_level = 0
+        self.parent = None
 
     def eval(self):
         if self.val1.eval() == self.val2.eval():
             return "kawai"
         else:
             return "baaka"
+
+
+class Check_else():
+    def __init__(self, val1, val2):
+        self.val1 = val1
+        self.val2 = val2
+        self.nested_level = 0
+        self.parent = None
+
+    def eval(self):
+        if self.val1.eval() == self.val2.eval():
+            return "baaka"
+        else:
+            return "kawai"
 
 
 # class for e_expression
