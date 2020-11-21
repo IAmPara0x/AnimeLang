@@ -114,12 +114,20 @@ class Check_if():
         self.val2 = val2
         self.nested_level = 0
         self.parent = None
+        self.eval_val = None
+        self.is_eval = False
 
     def eval(self):
-        if self.val1.eval() == self.val2.eval():
-            return "kawai"
+        if not self.is_eval:
+            if self.val1.eval() == self.val2.eval():
+                self.eval_val = "kawai"
+                return "kawai"
+            else:
+                self.eval_val = "baaka"
+                return "baaka"
+            self.is_eval = True
         else:
-            return "baaka"
+            return self.eval_val
 
 
 class Check_else():
@@ -128,8 +136,11 @@ class Check_else():
         self.val2 = val2
         self.nested_level = 0
         self.parent = None
+        self.eval_val = None
 
     def eval(self):
+        if self.eval_val is not None:
+            return self.eval_val
         if self.val1.eval() == self.val2.eval():
             return "baaka"
         else:
@@ -184,6 +195,14 @@ class E_expressions_list():
     @property
     def len(self):
         return len(self.e_expressions_list)
+
+class Error_type:
+    def __init__(self, error_type, error_value):
+        self.error_type = error_type
+        self.error_value = error_value
+
+    def eval(self):
+        return f"{self.error_type} : {self.error_value}"
 
 
 class Exit:

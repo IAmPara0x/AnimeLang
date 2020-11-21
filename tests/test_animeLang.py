@@ -1,5 +1,5 @@
 import unittest
-from tests.cases import PRINT_TESTCASE_DICT, ARITHMETIC_TESTCASE_DICT, VARIABLE_TESTCASE_DICT
+from tests.cases import PRINT_TESTCASE_DICT, ARITHMETIC_TESTCASE_DICT, VARIABLE_TESTCASE_DICT, CONDITIONALS_TESTCASE_DICT
 from lexer import Lexer
 from tokens import TOKENS_DICT
 from parser import Parser
@@ -35,4 +35,11 @@ class TestAnimeLang(unittest.TestCase):
             all_tokens = lexer.get_lexer().lex(VARIABLE_TESTCASE_DICT[i][0])
             ans = parser.parse(all_tokens).eval()
             self.assertEqual(ans, VARIABLE_TESTCASE_DICT[i][1])
+            print(i + " passed")
+
+    def test_conditionals(self):
+        for i in CONDITIONALS_TESTCASE_DICT.keys():
+            all_tokens = lexer.get_lexer().lex(CONDITIONALS_TESTCASE_DICT[i][0])
+            ans = parser.parse(all_tokens).eval()
+            self.assertEqual(ans, CONDITIONALS_TESTCASE_DICT[i][1])
             print(i + " passed")

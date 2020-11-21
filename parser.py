@@ -87,21 +87,21 @@ class Parser():
             return p[0]
 
         # parsing of the list ends here
-        @self.pg.production('list_expression : S_OPEN_PAREN expression')
+        @self.pg.production('list_expression : list_expression expression S_CLOSE_PAREN')
         def list_end(p):
-            return p[1]
+            p[0].value.append(p[1].eval())
+            return p[0]
 
         # parses all the elements insides the list
-        @self.pg.production('expression : expression COMMA expression')
+        @self.pg.production('list_expression : list_expression expression COMMA')
         def list_parse(p):
-            p[2].value.insert(0, p[0].eval())
-            return p[2]
+            p[0].value.append(p[1].eval())
+            return p[0]
 
         # parsing of the created list begins here
-        @self.pg.production('expression : expression S_CLOSE_PAREN')
+        @self.pg.production('list_expression : S_OPEN_PAREN')
         def list_begin(p):
             new_list = List_type()
-            new_list.value.insert(0, p[0].eval())
             return new_list
 
         # gets the element from the list given index number
@@ -218,6 +218,7 @@ class Parser():
 
         @self.pg.production('line_expression : INDEX_W n_expression v_expression')
         @self.pg.production('line_expression : INDEX_W BAR expression BAR n_expression v_expression')
+        @self.pg.production('line_expression : CONDITIONAL_IF_R INDEX_W BAR expression BAR n_expression v_expression')
         @self.pg.production('line_expression : CONDITIONAL_IF_R INDEX_W n_expression v_expression')
         def change_variable_value(p):
             if len(p) == 4:
@@ -244,6 +245,16 @@ class Parser():
                 var.value[index] = value
                 return var
 
+            elif len(p) == 7:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                name = p[5].value
+                index = p[3].eval()
+                value = p[-1].eval()
+                var = self.variables_dict.get_variable(name)
+                var.value[index] = value
+                return p[0]
+
         @self.pg.production('expression : line_expression')
         def line_expression(p):
             return p[0]
@@ -267,9 +278,13 @@ class Parser():
                 return Check_if(p[2], p[6])
             elif len(p) == 2:
                 if self.global_nested_level == p[0].nested_level:
-                    return Check_else(p[0].val1, p[0].val2)
+                    check_else = Check_else(p[0].val1, p[0].val2)
+                    check_else.eval_val = "baaka" if p[0].eval_val == "kawai" else "kawai"
+                    return check_else
                 else:
-                    return Check_else(p[0].parent.val1, p[0].parent.val2)
+                    check_else = Check_else(p[0].val1, p[0].val2)
+                    check_else.eval_val = "baaka" if p[0].eval_val == "kawai" else "kawai"
+                    return check_else
             elif len(p) == 9:
                 condtional = Check_if(p[3], p[7])
                 condtional.parent = p[0]
@@ -299,6 +314,7 @@ class Parser():
         #### GRAMMAR for e_expressions ####
 
         @self.pg.production('e_expression : line_expression')
+        @self.pg.production('e_expression : CONDITIONAL_IF_R')
         @self.pg.production('e_expression : e_expression line_expression')
         def get_e_expression(p):
             if len(p) == 2:
