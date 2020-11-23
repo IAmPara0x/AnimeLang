@@ -1,4 +1,4 @@
-
+import re
 #### STORES ALL THE TERMINAL TOKENS NAME FOR ANIME LANG ######
 
 TOKENS_DICT = {}
@@ -32,6 +32,13 @@ TOKENS_DICT["COMMA"] = r','
 TOKENS_DICT["C_BOOL"] = r'ship'
 TOKENS_DICT["LINE_END"] = r'meow'
 TOKENS_DICT["BAR"] = r'\|'
+TOKENS_DICT["APPEND"] = r'ADD'
+TOKENS_DICT["REMOVE"] = r'REMOVE'
+TOKENS_DICT["TO"] = r'TO'
+TOKENS_DICT["FROM"] = r'FROM'
+TOKENS_DICT["SIZE"] = r'size'
+TOKENS_DICT["TYPE"] = r'type'
+
 
 # Keywords for conditionals
 TOKENS_DICT["CHECK"] = r'create_ship'

@@ -15,7 +15,9 @@ from ast import (
     Booleans,
     Check_if,
     Check_else,
+    Info_type,
     Print,
+    Error_type,
     Exit
 )
 from tokens import TOKENS_DICT
@@ -54,6 +56,10 @@ class Parser():
         @self.pg.production('expression : expression MULTIPLY expression')
         @self.pg.production('expression : expression DIVIDE expression')
         def expression_binayop(p):
+            if isinstance(p[0], Error_type):
+                return p[0]
+            if isinstance(p[1], Error_type):
+                return p[1]
             left = p[0]
             right = p[2]
 
@@ -66,8 +72,7 @@ class Parser():
             elif p[1].gettokentype() == 'DIVIDE':
                 return Divide(left, right)
             else:
-                raise AssertionError(
-                    'B-Baakaa Baaaaaaaaaaaaaaka you made a mistake Baaaaka.')
+                return Error_type("OPERATOR NOT VALID meow", f"Ba-aaaka {p[1].value} is not a valid operator.")
 
         ########  GRAMMA FOR BASIC DATATYPES ########
 
@@ -105,19 +110,53 @@ class Parser():
             return new_list
 
         # gets the element from the list given index number
-        @self.pg.production('expression : INDEX_W BAR expression BAR expression')
+        @self.pg.production('expression : INDEX_W BAR expression BAR val_expression')
+        @self.pg.production('expression : INDEX_W BAR expression BAR list_expression')
         def get_list_index(p):
+            if isinstance(p[-1], Error_type):
+                return p[-1]
             p[4].is_index = True
             p[4].index = p[2].eval()
             return p[4]
 
+        @self.pg.production('expression : APPEND expression TO val_expression')
+        def add_to_list(p):
+            if isinstance(p[-1], Error_type):
+                return p[-1]
+            if p[-1].type == "LIST":
+                p[-1].value.append(p[1].eval())
+            return p[-1]
+
+        @self.pg.production('expression : REMOVE INDEX_W FROM val_expression')
+        def remove_from_list(p):
+            if isinstance(p[-1], Error_type):
+                return p[-1]
+            if p[-1].type == "LIST":
+                p[-1].value.pop()
+            return p[-1]
+
+        @self.pg.production('expression : C_LIST SIZE val_expression')
+        def get_length_of_list(p):
+            if isinstance(p[-1], Error_type):
+                return p[-1]
+            if p[-1].type == "LIST":
+                length = len(p[-1].value)
+                return Integer(length)
+
        #### GRAMMAR FOR VARIABLES ####
 
+        @self.pg.production('expression : val_expression')
+        def val_expression(p):
+           return p[0]
+
         # return the value of the variable
-        @self.pg.production('expression : n_expression')
+        @self.pg.production('val_expression : n_expression')
         def return_variable(p):
             name = p[0].value
-            return self.variables_dict.get_variable(name)
+            try:
+                return self.variables_dict.dict[name]
+            except KeyError:
+                return Error_type("WAIFU DOES NOT EXISTS", f"Baaaka you haven't created a waifu with name '{name}-chan'")
 
         # returns the name of the variable
         @self.pg.production('n_expression : VARIABLE')
@@ -255,6 +294,21 @@ class Parser():
                 var.value[index] = value
                 return p[0]
 
+        @self.pg.production('expression : INDEX_W TYPE val_expression')
+        def get_variable_type(p):
+            if isinstance(p[-1], Error_type):
+                return p[-1]
+            msg = None
+            if p[-1].type == "INTEGER":
+                msg = f"waifu {p[-1].name}-chan is a tsundere"
+            elif p[-1].type == "FLOAT":
+                msg = f"waifu {p[-1].name}-chan is a yandere"
+            elif p[-1].type == "LIST":
+                msg = f"{p[-1].name} is a harem with lots of waifus"
+            elif p[-1].type == "BOOL":
+                msg = f"{p[-1].name} is of type ship"
+            return Info_type(msg)
+
         @self.pg.production('expression : line_expression')
         def line_expression(p):
             return p[0]
@@ -327,7 +381,7 @@ class Parser():
         def expression_close(p):
             return Exit()
 
-        ######## ERROR Handling - UwU ########
+        ######## ERROR Handling ########
 
         @self.pg.error
         def error_handler(token):

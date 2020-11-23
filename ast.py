@@ -65,7 +65,8 @@ class Print():
         self.value = value
 
     def eval(self):
-        return self.value.eval()
+        print(self.value.eval())
+        # return self.value.eval()
 
 
 # class for variable
@@ -195,6 +196,14 @@ class E_expressions_list():
     @property
     def len(self):
         return len(self.e_expressions_list)
+
+class Info_type():
+    def __init__(self, string : str):
+        self.info = string
+
+    def eval(self):
+        return self.info
+
 
 class Error_type:
     def __init__(self, error_type, error_value):

@@ -1,4 +1,6 @@
 ideas.wiki
 __pycache__/
 .vim/
+.vscode/
 tests/__pycache__/
+random_stuff.py
