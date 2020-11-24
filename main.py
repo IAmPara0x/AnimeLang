@@ -4,7 +4,9 @@ from lexer import Lexer
 from tokens import TOKENS_DICT
 from parser import Parser
 from cmd import Cmd
+import warnings
 
+warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
 
 lexer = Lexer()
 lexer.add_tokens(TOKENS_DICT)
@@ -27,18 +29,19 @@ class AnimeLangPromt(Cmd):
 
 if __name__ == "__main__":
     # Main loop for getting input
-    if sys.argv[1] == "--f":
-        if len(sys.argv) != 3:
-            print("Meow you haven't given a filwe to read. Ba-aaaka")
-        else:
-            filename = sys.argv[2]
-            if Path(filename).suffix == '.ecchi':
-                file = None
-                with open(filename, "r") as f:
-                    file = f.read().replace('\n', '')
-                all_tokens = lexer.get_lexer().lex(file)
-                parser.parse(all_tokens).eval()
+    if len(sys.argv) >= 2:
+        if sys.argv[1] == "--f":
+            if len(sys.argv) != 3:
+                print("Meow you haven't given a filwe to read. Ba-aaaka")
             else:
-                print("Meow the filename was not of type '.ecchi'")
+                filename = sys.argv[2]
+                if Path(filename).suffix == '.ecchi':
+                    file = None
+                    with open(filename, "r") as f:
+                        file = f.read()
+                    all_tokens = lexer.get_lexer().lex(file)
+                    parser.parse(all_tokens).eval()
+                else:
+                    print("Meow the filename was not of type '.ecchi'")
     else:
         AnimeLangPromt().cmdloop()

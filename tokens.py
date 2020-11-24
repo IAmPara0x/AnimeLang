@@ -47,6 +47,10 @@ TOKENS_DICT["TRUE"] = r'kawai'
 TOKENS_DICT["FALSE"] = r'baaka'
 TOKENS_DICT["IS_EQUALS"] = r'X'
 
+# sys keywords
 TOKENS_DICT["PRINT"] = r'moshi_moshi'
 TOKENS_DICT["CLOSE"] = r'.exit'
+TOKENS_DICT["ENTRY"] = r'yahallo'
+TOKENS_DICT["EXIT"] = r'sayonara'
+
 TOKENS_DICT["VARIABLE"] = r'[a-zA-Z0-9_]+'

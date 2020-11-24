@@ -65,9 +65,18 @@ class Print():
         self.value = value
 
     def eval(self):
-        print(self.value.eval())
-        # return self.value.eval()
+        return self.value.eval()
 
+class Print_stack():
+    def __init__(self):
+        self.stack = []
+
+    def eval(self):
+        for i in self.stack:
+            print(i.eval())
+
+    def append(self, val) -> None:
+        self.stack.append(val)
 
 # class for variable
 class Variable_type():
