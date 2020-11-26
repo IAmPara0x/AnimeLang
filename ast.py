@@ -1,3 +1,5 @@
+from colorama import Fore, Back, Style
+
 class Integer():
     def __init__(self, value):
         self.value = value
@@ -12,6 +14,14 @@ class Float():
 
     def eval(self):
         return float(self.value)
+
+
+class String_type():
+    def __init__(self, value):
+        self.value = str(value)
+
+    def eval(self):
+        return self.value
 
 
 class BinaryOp():
@@ -70,13 +80,25 @@ class Print():
 class Print_stack():
     def __init__(self):
         self.stack = []
+        self.info_terms = []
 
     def eval(self):
-        for i in self.stack:
-            print(i.eval())
+        for i, obj in enumerate(self.stack):
+            if i in self.info_terms:
+                print(Fore.GREEN + obj)
+                print(Style.RESET_ALL)
+            else:
+                print(obj)
 
     def append(self, val) -> None:
-        self.stack.append(val)
+        if isinstance(val.eval(), list):
+            obj = val.eval().copy()
+        elif isinstance(val, Info_type):
+            obj = val.eval()
+            self.info_terms.append(len(self.stack))
+        else:
+            obj = val.eval()
+        self.stack.append(obj)
 
 # class for variable
 class Variable_type():

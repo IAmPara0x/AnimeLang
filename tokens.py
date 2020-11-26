@@ -28,6 +28,7 @@ TOKENS_DICT["C_INTEGER"] = r'tsundere'
 TOKENS_DICT["C_FLOAT"] = r'yandere'
 TOKENS_DICT["EQUALS"] = r'='
 TOKENS_DICT["C_LIST"] = r'harem'
+TOKENS_DICT["C_STRING"] = r'kuudere'
 TOKENS_DICT["COMMA"] = r','
 TOKENS_DICT["C_BOOL"] = r'ship'
 TOKENS_DICT["LINE_END"] = r'meow'
@@ -38,6 +39,7 @@ TOKENS_DICT["TO"] = r'TO'
 TOKENS_DICT["FROM"] = r'FROM'
 TOKENS_DICT["SIZE"] = r'size'
 TOKENS_DICT["TYPE"] = r'type'
+TOKENS_DICT["I_COMMA2"] = r'\"'
 
 
 # Keywords for conditionals

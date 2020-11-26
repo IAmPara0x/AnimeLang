@@ -4,9 +4,9 @@ from lexer import Lexer
 from tokens import TOKENS_DICT
 from parser import Parser
 from cmd import Cmd
-import warnings
+# import warnings
 
-warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
+# warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
 
 lexer = Lexer()
 lexer.add_tokens(TOKENS_DICT)

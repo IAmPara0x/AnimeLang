@@ -16,6 +16,7 @@ from ast import (
     Check_if,
     Check_else,
     Info_type,
+    String_type,
     Print,
     Print_stack,
     Error_type,
@@ -35,8 +36,6 @@ class Parser():
         self.print_stack = Print_stack()
 
     def parse(self):
-        # @self.pg.production('program : expression LINE_END')
-        # TODO: replace this line with above one
         @self.pg.production('program : expression')
         @self.pg.production('program : f_expression')
         def program(p):
@@ -54,21 +53,17 @@ class Parser():
             return self.print_stack
 
         #### GRAMMAR FOR PRINTING STUFF ####
-        @self.pg.production('f_expression : f_expression PRINT expression LINE_END')
+        @self.pg.production('line_expression : e_expression PRINT expression LINE_END')
         @self.pg.production('expression : PRINT expression LINE_END')
         def print_expression(p):
             if len(p) == 4:
-                self.print_stack.append(p[2])
-                return p[2]
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    self.print_stack.append(p[2])
+                    return p[0]
+            self.print_stack.append(p[1])
             return p[1]
-
-        @self.pg.production('line_expression : CONDITIONAL_IF_R PRINT expression LINE_END')
-        def conditional_print_expression(p):
-            if p[0].eval() == "baaka":
-                return p[0]
-            else:
-                self.print_stack.append(p[2])
-                return p[0]
 
 
         ######## GRAMMAR FOR BASIC ARITHMETIC CALCULATIONS ########
@@ -146,7 +141,7 @@ class Parser():
             return p[4]
 
         @self.pg.production('line_expression : APPEND expression TO val_expression LINE_END')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R APPEND expression TO val_expression LINE_END')
+        @self.pg.production('line_expression : e_expression APPEND expression TO val_expression LINE_END')
         def add_to_list(p):
             if isinstance(p[-2], Error_type):
                 return p[-2]
@@ -161,12 +156,12 @@ class Parser():
 
             elif len(p) == 5:
                 if p[-2].type == "LIST":
-                    p[-2].value.append(p[2].eval())
+                    p[-2].value.append(p[1].eval())
                 return p[-2]
 
 
         @self.pg.production('line_expression : REMOVE INDEX_W FROM val_expression LINE_END')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R REMOVE INDEX_W FROM val_expression LINE_END')
+        @self.pg.production('line_expression : e_expression REMOVE INDEX_W FROM val_expression LINE_END')
         def remove_from_list(p):
             if isinstance(p[-2], Error_type):
                 return p[-2]
@@ -179,9 +174,9 @@ class Parser():
                         p[-2].value.pop()
                     return p[0]
             elif len(p) == 5:
-                if p[-1].type == "LIST":
-                    p[-1].value.pop()
-                return p[-1]
+                if p[-2].type == "LIST":
+                    p[-2].value.pop()
+                return p[-2]
 
 
         @self.pg.production('expression : C_LIST SIZE val_expression')
@@ -218,8 +213,8 @@ class Parser():
             return p[1]
 
         @self.pg.production('line_expression : NEW C_INTEGER n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_INTEGER n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('line_expression : e_expression NEW C_INTEGER n_expression v_expression')
+        @self.pg.production('line_expression : e_expression NEW C_INTEGER n_expression v_expression')
         def variable_int(p):
             # check if condtional local scope
             if len(p) == 5:
@@ -242,7 +237,7 @@ class Parser():
                 return variable
 
         @self.pg.production('line_expression : NEW C_FLOAT n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_FLOAT n_expression v_expression')
+        @self.pg.production('line_expression : e_expression NEW C_FLOAT n_expression v_expression')
         def variable_float(p):
             if len(p) == 5:
                 if p[0].eval() == "baaka":
@@ -263,7 +258,7 @@ class Parser():
                 return variable
 
         @self.pg.production('line_expression : NEW C_LIST n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_LIST n_expression v_expression')
+        @self.pg.production('line_expression : e_expression NEW C_LIST n_expression v_expression')
         def variable_list(p):
             if len(p) == 5:
                 if p[0].eval() == "baaka":
@@ -284,7 +279,7 @@ class Parser():
                 return variable
 
         @self.pg.production('line_expression : NEW C_BOOL n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R NEW C_BOOL n_expression v_expression')
+        @self.pg.production('line_expression : e_expression NEW C_BOOL n_expression v_expression')
         def variable_bool(p):
             if len(p) == 5:
                 if p[0].eval() == "baaka":
@@ -304,10 +299,37 @@ class Parser():
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
+        # parses string
+        @self.pg.production('expression : I_COMMA2 VARIABLE I_COMMA2')
+        def parse_string(p):
+            return String_type(p[1].value)
+
+        # creates string
+        @self.pg.production('line_expression : NEW C_STRING n_expression v_expression')
+        @self.pg.production('line_expression : e_expression NEW C_STRING n_expression v_expression')
+        def variables_string(p):
+            if len(p) == 5:
+                if p[0].eval() == "baaka":
+                    return p[0]
+                else:
+                    name = p[3].value
+                    value = p[-1].eval()
+                    type = "STRING"
+                    variable = Variable_type(name, type, value)
+                    self.variables_dict.add_variable(name, variable)
+                    return p[0]
+            elif len(p) == 4:
+                name = p[2].value
+                value = p[-1].eval()
+                type = "STRING"
+                variable = Variable_type(name, type, value)
+                self.variables_dict.add_variable(name, variable)
+                return variable
+
         @self.pg.production('line_expression : INDEX_W n_expression v_expression')
         @self.pg.production('line_expression : INDEX_W BAR expression BAR n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R INDEX_W BAR expression BAR n_expression v_expression')
-        @self.pg.production('line_expression : CONDITIONAL_IF_R INDEX_W n_expression v_expression')
+        @self.pg.production('line_expression : e_expression INDEX_W BAR expression BAR n_expression v_expression')
+        @self.pg.production('line_expression : e_expression INDEX_W n_expression v_expression')
         def change_variable_value(p):
             if len(p) == 4:
                 if p[0].eval() == "baaka":
@@ -359,7 +381,6 @@ class Parser():
             return Info_type(msg)
 
         @self.pg.production('expression : line_expression')
-        @self.pg.production('f_expression : f_expression line_expression')
         def line_expression(p):
             if len(p) == 2:
                 return p[1]

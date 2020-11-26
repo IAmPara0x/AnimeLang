@@ -1,14 +1,44 @@
 yahallo
 
-new yandere sakura = 11 meow
 
 create_ship(11 |X| 10)
 {
   new tsundere touka = (10 + 10) meow
-  
+
 } nani {
-  new yandere sakura = 20 meow
+  new harem ki = [1, 20] meow
+  new yandere sakura = 50 meow
+
+  moshi_moshi(ki) meow
+  moshi_moshi(sakura) meow
+
+  create_ship(1 |X| 1)
+  {
+
+    ADD (10 + 10) TO ki meow
+    waifu sakura = waifu |2| ki meow
+
+    moshi_moshi(sakura) meow
+
+    REMOVE waifu FROM ki meow
+    REMOVE waifu FROM ki meow
+
+  } meow
+
+  create_ship((sakura + 10) |X| 20)
+  {
+    ADD (sakura * 10) TO ki meow
+    waifu sakura = sakura * 10 meow
+
+    moshi_moshi(sakura) meow
+    moshi_moshi(ki) meow
+  } nani {
+    ADD (sakura * 20) TO ki meow
+    moshi_moshi(ki) meow
+    moshi_moshi(sakura) meow
+  } meow
+
+
 } meow
-moshi_moshi(sakura) meow
 
 sayonara
