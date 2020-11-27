@@ -40,7 +40,11 @@ if __name__ == "__main__":
                     with open(filename, "r") as f:
                         file = f.read()
                     all_tokens = lexer.get_lexer().lex(file)
-                    parser.parse(all_tokens).eval()
+                    try:
+                        parser.parse(all_tokens).eval()
+                    except Exception as e:
+                        print(e)
+                        pg.print_stack.eval()
                 else:
                     print("Meow the filename was not of type '.ecchi'")
     else:

@@ -1,4 +1,5 @@
 from rply import ParserGenerator
+from utils import *
 from ast import (
     Integer,
     Float,
@@ -76,13 +77,32 @@ class Parser():
         @self.pg.production('expression : expression ADD expression')
         @self.pg.production('expression : expression MULTIPLY expression')
         @self.pg.production('expression : expression DIVIDE expression')
-        def expression_binayop(p):
-            if isinstance(p[0], Error_type):
-                return p[0]
-            if isinstance(p[1], Error_type):
-                return p[1]
+        def expression_binaryop(p):
             left = p[0]
             right = p[2]
+
+            if isinstance(left, Variable_type) and isinstance(right, Variable_type):
+                if left.type == right.type:
+                    if p[1].gettokentype() == 'ADD':
+                        return Add(left, right)
+                    elif p[1].gettokentype() == 'SUBSTRACT':
+                        return Substract(left, right)
+                    elif p[1].gettokentype() == 'MULTIPLY':
+                        return Multiply(left, right)
+                    elif p[1].gettokentype() == 'DIVIDE':
+                        return Divide(left, right)
+                    else:
+                        return Error_type("OPERATOR NOT VALID meow", f"Ba-aaaka {p[1].value} is not a valid operator.")
+                else:
+                    left_type = get_var_type(left)
+                    right_type = get_var_type(right)
+
+                    err = Error_type("Can't operate with different type of waifus",
+                                     f"you tried to {p[1].gettokentype()} waifu '{left.name}-chan' which is of type {left_type} and "
+                                     + f"'{right.name}-chan' which is of type {right_type}")
+                    self.print_stack.append(err)
+                    raise ValueError()
+
 
             if p[1].gettokentype() == 'ADD':
                 return Add(left, right)
@@ -134,8 +154,6 @@ class Parser():
         @self.pg.production('expression : INDEX_W BAR expression BAR val_expression')
         @self.pg.production('expression : INDEX_W BAR expression BAR list_expression')
         def get_list_index(p):
-            if isinstance(p[-1], Error_type):
-                return p[-1]
             p[4].is_index = True
             p[4].index = p[2].eval()
             return p[4]
@@ -143,8 +161,6 @@ class Parser():
         @self.pg.production('line_expression : APPEND expression TO val_expression LINE_END')
         @self.pg.production('line_expression : e_expression APPEND expression TO val_expression LINE_END')
         def add_to_list(p):
-            if isinstance(p[-2], Error_type):
-                return p[-2]
 
             if len(p) == 6:
                 if p[0].eval() == "baaka":
@@ -163,8 +179,6 @@ class Parser():
         @self.pg.production('line_expression : REMOVE INDEX_W FROM val_expression LINE_END')
         @self.pg.production('line_expression : e_expression REMOVE INDEX_W FROM val_expression LINE_END')
         def remove_from_list(p):
-            if isinstance(p[-2], Error_type):
-                return p[-2]
 
             if len(p) == 6:
                 if p[0].eval() == "baaka":
@@ -181,8 +195,6 @@ class Parser():
 
         @self.pg.production('expression : C_LIST SIZE val_expression')
         def get_length_of_list(p):
-            if isinstance(p[-1], Error_type):
-                return p[-1]
             if p[-1].type == "LIST":
                 length = len(p[-1].value)
                 return Integer(length)
@@ -199,7 +211,8 @@ class Parser():
             name = p[0].value
             try:
                 return self.variables_dict.dict[name]
-            except KeyError:
+            except Exception as e:
+                self.print_stack.append(Error_type("WAIFU DOES NOT EXISTS", f"Baaaka you haven't created a waifu with name '{name}-chan'"))
                 return Error_type("WAIFU DOES NOT EXISTS", f"Baaaka you haven't created a waifu with name '{name}-chan'")
 
         # returns the name of the variable
@@ -326,49 +339,52 @@ class Parser():
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
-        @self.pg.production('line_expression : INDEX_W n_expression v_expression')
-        @self.pg.production('line_expression : INDEX_W BAR expression BAR n_expression v_expression')
-        @self.pg.production('line_expression : e_expression INDEX_W BAR expression BAR n_expression v_expression')
-        @self.pg.production('line_expression : e_expression INDEX_W n_expression v_expression')
+        @self.pg.production('line_expression : INDEX_W val_expression v_expression')
+        @self.pg.production('line_expression : INDEX_W BAR expression BAR val_expression v_expression')
+        @self.pg.production('line_expression : e_expression INDEX_W BAR expression BAR val_expression v_expression')
+        @self.pg.production('line_expression : e_expression INDEX_W val_expression v_expression')
         def change_variable_value(p):
             if len(p) == 4:
                 if p[0].eval() == "baaka":
                     return p[0]
                 else:
-                    name = p[2].value
+                    var = p[2]
                     value = p[-1].eval()
-                    var = self.variables_dict.get_variable(name)
                     var.value = value
+                    var.type = get_exp_type(value)
+                    if var.type == "LIST":
+                        var.is_index = False
+                        var.index = None
                     return p[0]
+
             elif len(p) == 3:
-                name = p[1].value
+                var = p[1]
                 value = p[-1].eval()
-                var = self.variables_dict.get_variable(name)
                 var.value = value
+                var.type = get_exp_type(value)
+                if var.type == "LIST":
+                    var.is_index = False
+                    var.index = None
                 return var
 
             elif len(p) == 6:
-                name = p[4].value
+                var = p[4]
                 index = p[2].eval()
                 value = p[-1].eval()
-                var = self.variables_dict.get_variable(name)
                 var.value[index] = value
                 return var
 
             elif len(p) == 7:
                 if p[0].eval() == "baaka":
                     return p[0]
-                name = p[5].value
+                var = p[5]
                 index = p[3].eval()
                 value = p[-1].eval()
-                var = self.variables_dict.get_variable(name)
                 var.value[index] = value
                 return p[0]
 
         @self.pg.production('expression : INDEX_W TYPE val_expression')
         def get_variable_type(p):
-            if isinstance(p[-1], Error_type):
-                return p[-1]
             msg = None
             if p[-1].type == "INTEGER":
                 msg = f"waifu {p[-1].name}-chan is a tsundere"
@@ -378,6 +394,8 @@ class Parser():
                 msg = f"{p[-1].name} is a harem with lots of waifus"
             elif p[-1].type == "BOOL":
                 msg = f"{p[-1].name} is of type ship"
+            elif p[-1].type == "STRING":
+                msg = f"waifu {p[-1].name} is a kuudere"
             return Info_type(msg)
 
         @self.pg.production('expression : line_expression')

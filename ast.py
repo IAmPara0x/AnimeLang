@@ -81,11 +81,15 @@ class Print_stack():
     def __init__(self):
         self.stack = []
         self.info_terms = []
+        self.error_terms = []
 
     def eval(self):
         for i, obj in enumerate(self.stack):
             if i in self.info_terms:
                 print(Fore.GREEN + obj)
+                print(Style.RESET_ALL)
+            elif i in self.error_terms:
+                print(Fore.RED + obj)
                 print(Style.RESET_ALL)
             else:
                 print(obj)
@@ -96,6 +100,9 @@ class Print_stack():
         elif isinstance(val, Info_type):
             obj = val.eval()
             self.info_terms.append(len(self.stack))
+        elif isinstance(val, Error_type):
+            obj = val.eval()
+            self.error_terms.append(len(self.stack))
         else:
             obj = val.eval()
         self.stack.append(obj)
@@ -232,9 +239,8 @@ class Info_type():
     def __init__(self, string : str):
         self.info = string
 
-    def eval(self):
+    def eval(self) -> str:
         return self.info
-
 
 class Error_type:
     def __init__(self, error_type, error_value):
