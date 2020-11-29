@@ -4,9 +4,9 @@ from lexer import Lexer
 from tokens import TOKENS_DICT
 from parser import Parser
 from cmd import Cmd
-# import warnings
+import warnings
 
-# warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
+warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
 
 lexer = Lexer()
 lexer.add_tokens(TOKENS_DICT)
@@ -40,11 +40,14 @@ if __name__ == "__main__":
                     with open(filename, "r") as f:
                         file = f.read()
                     all_tokens = lexer.get_lexer().lex(file)
+                    #TODO: uncomment this for errors
                     try:
                         parser.parse(all_tokens).eval()
                     except Exception as e:
                         print(e)
                         pg.print_stack.eval()
+                    # parser.parse(all_tokens).eval()
+
                 else:
                     print("Meow the filename was not of type '.ecchi'")
     else:

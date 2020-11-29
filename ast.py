@@ -18,7 +18,7 @@ class Float():
 
 class String_type():
     def __init__(self, value):
-        self.value = str(value)
+        self.value = value
 
     def eval(self):
         return self.value
@@ -114,8 +114,22 @@ class Variable_type():
         self.value = value
         self.type = type
         if self.type == "LIST":
+            if not isinstance(self.value, list):
+                raise ValueError()
             self.is_index = False
             self.index = None
+        if self.type == "BOOL":
+            if self.value != "kawai" and self.value != "baaka":
+                raise ValueError()
+        if self.type == "INTEGER":
+            if not isinstance(self.value, int):
+                raise ValueError()
+        if self.type == "FLOAT":
+            if not isinstance(self.value, float):
+                raise ValueError()
+        if self.type == "STRING":
+            if not isinstance(self.value, str):
+                raise ValueError()
 
     def eval(self):
         if self.type == "LIST":

@@ -1,22 +1,12 @@
 yahallo
 
+moshi_moshi("tu tu ru") meow
+new yandere touka = 10.0 meow
 
-create_ship(11 |X| 10)
+create_ship(touka |X| 10)
 {
-  new tsundere touka = (10 + 10) meow
-
-} nani {
-
-  new yandere sakura = 50.1 meow
-  new harem ki = [1,2] meow
-
-  moshi_moshi(sakura) meow
-
-  waifu sakura = [1,1,1] meow
-
-  moshi_moshi(sakura) meow
-  moshi_moshi(waifu type sakura) meow
-
+  new kuudere kaori = 10 meow
 } meow
 
 sayonara
+

@@ -39,7 +39,6 @@ TOKENS_DICT["TO"] = r'TO'
 TOKENS_DICT["FROM"] = r'FROM'
 TOKENS_DICT["SIZE"] = r'size'
 TOKENS_DICT["TYPE"] = r'type'
-TOKENS_DICT["I_COMMA2"] = r'\"'
 
 
 # Keywords for conditionals
@@ -56,3 +55,4 @@ TOKENS_DICT["ENTRY"] = r'yahallo'
 TOKENS_DICT["EXIT"] = r'sayonara'
 
 TOKENS_DICT["VARIABLE"] = r'[a-zA-Z0-9_]+'
+TOKENS_DICT["STRING"] = r'\"[a-zA-Z0-9_\s]+\"'

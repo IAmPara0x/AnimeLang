@@ -55,7 +55,7 @@ class Parser():
 
         #### GRAMMAR FOR PRINTING STUFF ####
         @self.pg.production('line_expression : e_expression PRINT expression LINE_END')
-        @self.pg.production('expression : PRINT expression LINE_END')
+        @self.pg.production('line_expression : PRINT expression LINE_END')
         def print_expression(p):
             if len(p) == 4:
                 if p[0].eval() == "baaka":
@@ -92,7 +92,10 @@ class Parser():
                     elif p[1].gettokentype() == 'DIVIDE':
                         return Divide(left, right)
                     else:
-                        return Error_type("OPERATOR NOT VALID meow", f"Ba-aaaka {p[1].value} is not a valid operator.")
+                        err = Error_type("OPERATOR NOT VALID meow", f"Ba-aaaka {p[1].value} is not a valid operator.")
+                        self.print_stack.append(err)
+                        raise ValueError()
+                        return err
                 else:
                     left_type = get_var_type(left)
                     right_type = get_var_type(right)
@@ -113,7 +116,10 @@ class Parser():
             elif p[1].gettokentype() == 'DIVIDE':
                 return Divide(left, right)
             else:
-                return Error_type("OPERATOR NOT VALID meow", f"Ba-aaaka {p[1].value} is not a valid operator.")
+                err = Error_type("OPERATOR NOT VALID meow", f"Ba-aaaka {p[1].value} is not a valid operator.")
+                self.print_stack.append(err)
+                raise ValueError()
+                return err
 
         ########  GRAMMA FOR BASIC DATATYPES ########
 
@@ -168,11 +174,19 @@ class Parser():
                 else:
                     if p[-2].type == "LIST":
                         p[-2].value.append(p[2].eval())
+                    else:
+                        err = Error_type("Waifu not suitable", f"you can add waifu only to your harem but '{p[-2].name}-chan' is not of harem type.")
+                        self.print_stack.append(err)
+                        raise ValueError()
                     return p[0]
 
             elif len(p) == 5:
                 if p[-2].type == "LIST":
                     p[-2].value.append(p[1].eval())
+                else:
+                    err = Error_type("Waifu not suitable", f"you can add waifu only to your harem but '{p[-2].name}-chan' is not of harem type.")
+                    self.print_stack.append(err)
+                    raise ValueError()
                 return p[-2]
 
 
@@ -186,10 +200,18 @@ class Parser():
                 else:
                     if p[-2].type == "LIST":
                         p[-2].value.pop()
+                    else:
+                        err = Error_type("Waifu not suitable", f"you can remove waifu only from your harem but '{p[-2].name}-chan' is not of harem type.")
+                        self.print_stack.append(err)
+                        raise ValueError()
                     return p[0]
             elif len(p) == 5:
                 if p[-2].type == "LIST":
                     p[-2].value.pop()
+                else:
+                    err = Error_type("Waifu not suitable", f"you can remove waifu only from your harem but '{p[-2].name}-chan' is not of harem type.")
+                    self.print_stack.append(err)
+                    raise ValueError()
                 return p[-2]
 
 
@@ -198,6 +220,10 @@ class Parser():
             if p[-1].type == "LIST":
                 length = len(p[-1].value)
                 return Integer(length)
+            else:
+                err = Error_type("Waifu not suitable", f"waifu does not have size baa-aaka only harem has it's size but '{p[-1].name}-chan' is not harem type")
+                self.print_stack.append(err)
+                raise ValueError()
 
        #### GRAMMAR FOR VARIABLES ####
 
@@ -213,6 +239,7 @@ class Parser():
                 return self.variables_dict.dict[name]
             except Exception as e:
                 self.print_stack.append(Error_type("WAIFU DOES NOT EXISTS", f"Baaaka you haven't created a waifu with name '{name}-chan'"))
+                raise ValueError()
                 return Error_type("WAIFU DOES NOT EXISTS", f"Baaaka you haven't created a waifu with name '{name}-chan'")
 
         # returns the name of the variable
@@ -235,17 +262,27 @@ class Parser():
                     return p[0]
                 else:
                     name = p[3].value
-                    value = Integer(p[-1].eval()).eval()
+                    value = p[-1].eval()
                     type = "INTEGER"
-                    variable = Variable_type(name, type, value)
+                    try:
+                        variable = Variable_type(name, type, value)
+                    except ValueError:
+                        err = Error_type("waifu not suitable", f"Tsundere waifus can only have integers but {p[-1].eval()} is not an integer.")
+                        self.print_stack.append(err)
+                        raise ValueError()
                     self.variables_dict.add_variable(name, variable)
                     return p[0]
 
             elif len(p) == 4:
                 name = p[2].value
-                value = Integer(p[-1].eval()).eval()
+                value = p[-1].eval()
                 type = "INTEGER"
-                variable = Variable_type(name, type, value)
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type("waifu not suitable", f"Tsundere waifus can only have integers but {p[-1].eval()} is not an integer.")
+                    self.print_stack.append(err)
+                    raise ValueError()
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
@@ -257,16 +294,27 @@ class Parser():
                     return p[0]
                 else:
                     name = p[3].value
-                    value = Float(p[-1].eval()).eval()
+                    value = p[-1].eval()
                     type = "FLOAT"
-                    variable = Variable_type(name, type, value)
+                    try:
+                        variable = Variable_type(name, type, value)
+                    except ValueError:
+                        err = Error_type("waifu not suitable", f"Yandere waifus can only have floats but {p[-1].eval()} is not an float.")
+                        self.print_stack.append(err)
+                        raise ValueError()
                     self.variables_dict.add_variable(name, variable)
                     return p[0]
             elif len(p) == 4:
                 name = p[2].value
-                value = Float(p[-1].eval()).eval()
+                value = p[-1].eval()
                 type = "FLOAT"
-                variable = Variable_type(name, type, value)
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type("waifu not suitable", f"Yandere waifus can only have floats but {p[-1].eval()} is not an float.")
+                    self.print_stack.append(err)
+                    raise ValueError()
+                    return err
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
@@ -280,14 +328,29 @@ class Parser():
                     name = p[3].value
                     value = p[-1].eval()
                     type = "LIST"
-                    variable = Variable_type(name, type, value)
+                    try:
+                        variable = Variable_type(name, type, value)
+                    except ValueError:
+                        err = Error_type("harem not suitable", f"Harem can have only group of waifus, integers, floats, strings but "
+                                         f"{value} doesn't satisfies any one of the group.")
+                        self.print_stack.append(err)
+                        raise ValueError()
+                        return err
+
                     self.variables_dict.add_variable(name, variable)
                     return p[0]
             elif len(p) == 4:
                 name = p[2].value
                 value = p[-1].eval()
                 type = "LIST"
-                variable = Variable_type(name, type, value)
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type("Harem not suitable", f"Harem can have only group of waifus, integers, floats, strings but "
+                                     f"{value} doesn't satisfies any one of the group.")
+                    self.print_stack.append(err)
+                    raise ValueError()
+
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
@@ -301,21 +364,33 @@ class Parser():
                     name = p[3].value
                     value = p[-1].eval()
                     type = "BOOL"
-                    variable = Variable_type(name, type, value)
+                    try:
+                        variable = Variable_type(name, type, value)
+                    except ValueError:
+                        err = Error_type("Ship not suitable", f"A Ship can only be kawai or baaka but {value} is none of them.")
+                        self.print_stack.append(err)
+                        raise ValueError()
+
                     self.variables_dict.add_variable(name, variable)
                     return p[0]
             elif len(p) == 4:
                 name = p[2].value
                 value = p[-1].eval()
                 type = "BOOL"
-                variable = Variable_type(name, type, value)
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type("Ship not suitable", f"A Ship can only be kawai or baaka but {value} is none of them.")
+                    self.print_stack.append(err)
+                    raise ValueError()
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
         # parses string
-        @self.pg.production('expression : I_COMMA2 VARIABLE I_COMMA2')
-        def parse_string(p):
-            return String_type(p[1].value)
+
+        @self.pg.production('expression : STRING')
+        def cvt_string_to_expression(p):
+            return String_type(p[0].value)
 
         # creates string
         @self.pg.production('line_expression : NEW C_STRING n_expression v_expression')
@@ -328,14 +403,24 @@ class Parser():
                     name = p[3].value
                     value = p[-1].eval()
                     type = "STRING"
-                    variable = Variable_type(name, type, value)
+                    try:
+                        variable = Variable_type(name, type, value)
+                    except ValueError:
+                        err = Error_type("waifu not suitable", f"Kuudere waifus can only have strings but {p[-1].eval()} is not a string.")
+                        self.print_stack.append(err)
+                        raise ValueError()
                     self.variables_dict.add_variable(name, variable)
                     return p[0]
             elif len(p) == 4:
                 name = p[2].value
                 value = p[-1].eval()
                 type = "STRING"
-                variable = Variable_type(name, type, value)
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type("waifu not suitable", f"Kuudere waifus can only have strings but {p[-1].eval()} is not a string.")
+                    self.print_stack.append(err)
+                    raise ValueError()
                 self.variables_dict.add_variable(name, variable)
                 return variable
 
@@ -395,7 +480,7 @@ class Parser():
             elif p[-1].type == "BOOL":
                 msg = f"{p[-1].name} is of type ship"
             elif p[-1].type == "STRING":
-                msg = f"waifu {p[-1].name} is a kuudere"
+                msg = f"waifu {p[-1].name}-chan is a kuudere"
             return Info_type(msg)
 
         @self.pg.production('expression : line_expression')
