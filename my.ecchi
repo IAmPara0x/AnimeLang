@@ -1,11 +1,25 @@
 yahallo
 
-moshi_moshi("tu tu ru") meow
-new yandere touka = 10.0 meow
-
-create_ship(touka |X| 10)
+create_ship(10 |X| 10)
 {
-  new kuudere kaori = 10 meow
+  moshi_moshi(1) meow
+  create_ship(1 |X| 2)
+  {
+    moshi_moshi(1) meow
+  } nani 
+  {
+    moshi_moshi(1) meow
+  } meow
+} nani {
+  moshi_moshi(1) meow
+  moshi_moshi(1) meow
+  create_ship(1 |X| 2)
+  {
+    moshi_moshi(1) meow
+  } nani 
+  {
+    moshi_moshi(1) meow
+  } meow
 } meow
 
 sayonara

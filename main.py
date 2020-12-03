@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 import sys
 from pathlib import Path
 from lexer import Lexer
@@ -6,7 +8,7 @@ from parser import Parser
 from cmd import Cmd
 import warnings
 
-warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
+# warnings.filterwarnings("ignore") ### NOTE: use this to disable all the warnings during release
 
 lexer = Lexer()
 lexer.add_tokens(TOKENS_DICT)
@@ -41,12 +43,12 @@ if __name__ == "__main__":
                         file = f.read()
                     all_tokens = lexer.get_lexer().lex(file)
                     #TODO: uncomment this for errors
-                    try:
-                        parser.parse(all_tokens).eval()
-                    except Exception as e:
-                        print(e)
-                        pg.print_stack.eval()
-                    # parser.parse(all_tokens).eval()
+                    # try:
+                    #     parser.parse(all_tokens).eval()
+                    # except Exception as e:
+                    #     print(e)
+                    #     pg.print_stack.eval()
+                    parser.parse(all_tokens).eval()
 
                 else:
                     print("Meow the filename was not of type '.ecchi'")

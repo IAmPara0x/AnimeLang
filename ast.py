@@ -95,7 +95,9 @@ class Print_stack():
                 print(obj)
 
     def append(self, val) -> None:
-        if isinstance(val.eval(), list):
+        if val == None:
+            return
+        elif isinstance(val.eval(), list):
             obj = val.eval().copy()
         elif isinstance(val, Info_type):
             obj = val.eval()
@@ -153,7 +155,6 @@ class Variables_dict():
     def get_variable(self, name: str):
         return self.dict[name]
 
-# class for conditionals
 class Booleans():
     def __init__(self, value):
         self.value = value
@@ -161,93 +162,42 @@ class Booleans():
     def eval(self):
         return self.value
 
-class Check_if():
-    def __init__(self, val1, val2):
-        self.val1 = val1
-        self.val2 = val2
-        self.nested_level = 0
-        self.parent = None
-        self.eval_val = None
-        self.is_eval = False
+# class for conditionals
 
-    def eval(self):
-        if not self.is_eval:
-            if self.val1.eval() == self.val2.eval():
-                self.eval_val = "kawai"
-                return "kawai"
-            else:
-                self.eval_val = "baaka"
-                return "baaka"
-            self.is_eval = True
-        else:
-            return self.eval_val
-
-
-class Check_else():
-    def __init__(self, val1, val2):
-        self.val1 = val1
-        self.val2 = val2
-        self.nested_level = 0
-        self.parent = None
-        self.eval_val = None
-
-    def eval(self):
-        if self.eval_val is not None:
-            return self.eval_val
-        if self.val1.eval() == self.val2.eval():
-            return "baaka"
-        else:
-            return "kawai"
-
-
-# class for e_expression
-class Variable_buffer():
-    def __init__(self, variable_name, value, type=None, action="create"):
-        self.action = action
-        self.name = variable_name
-        self.value = value
-        if self.action == "create":
-            self.type = type
-
-    def eval(self, variables_dict):
-        if self.action == "create":
-            if self.type == "INTEGER":
-                self.value = int(self.value.eval())
-            if self.type == "FLOAT":
-                self.value = float(self.value.eval())
-            variable = Variable_type(self.name, self.type, self.value)
-            variables_dict[self.name] = variable
-        if self.action == "change":
-            variables_dict[self.name].value = self.value.eval()
-        return variables_dict
-
-
-class Eval_expressions_buffer():
+class Conditional_level():
     def __init__(self):
-        self.expressions = []
-
-    def add_expression(self,expression):
-        self.expressions.append(expression)
-
-    def eval(self, variables_dict):
-        self.variables_dict = variables_dict
-        for i in self.expressions:
-            self.variables_dict = i.eval(variables_dict)
-        return self.variables_dict
-
-class E_expressions_list():
-    def __init__(self):
-        self.e_expressions_list = []
-
-    def add_e_expression(self, e_expression: Eval_expressions_buffer):
-        self.e_expressions_list.append(e_expression)
-
-    def get_e_expression(self):
-        return self.e_expressions_list.pop(0)
+        self.current_nested_level = 0
+        self.if_conditional = None
+        self.else_conditional = None
+        self.state = None
+        self.next_conditional = None
+        self.parent_conditional = None
 
     @property
-    def len(self):
-        return len(self.e_expressions_list)
+    def prev(self):
+        return self.parent_conditional
+
+    @property
+    def next(self):
+        return self.next_conditional
+
+
+class If_type():
+    def __init__(self, val1, val2):
+        self.val1 = val1
+        self.val2 = val2
+        self.state = True if self.val1 == self.val2 else False
+
+    def eval():
+        return self.state
+
+
+class Else_type():
+    def __init__(self, state):
+        self.state = state
+
+    def eval():
+        return self.state
 
 class Info_type():
     def __init__(self, string : str):
