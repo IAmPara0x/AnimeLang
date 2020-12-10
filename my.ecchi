@@ -1,26 +1,29 @@
 yahallo
 
-create_ship(10 |X| 10)
+new arc Alice >>
+  moshi_moshi("helo") meow
+<< meow
+
+START arc Alice meow
+
+create_ship(0 |X| 1)
 {
-  moshi_moshi(1) meow
-  create_ship(1 |X| 2)
+  moshi_moshi(touka)meow
+  create_ship(1 |X| 0)
   {
-    moshi_moshi(1) meow
-  } nani 
+    moshi_moshi(3)meow
+  }nani{
+    moshi_moshi(2)meow
+  }meow
+}nani{
+  new tsundere touka = 10 meow
+  create_ship(1 |X| 0)
   {
-    moshi_moshi(1) meow
-  } meow
-} nani {
-  moshi_moshi(1) meow
-  moshi_moshi(1) meow
-  create_ship(1 |X| 2)
-  {
-    moshi_moshi(1) meow
-  } nani 
-  {
-    moshi_moshi(1) meow
-  } meow
-} meow
+    moshi_moshi(toka)meow
+  }nani{
+    moshi_moshi(touka)meow
+  }meow
+}meow
+
 
 sayonara
-

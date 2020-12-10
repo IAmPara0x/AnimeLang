@@ -1,4 +1,3 @@
-
 def get_var_type(var):
     if var.type == "INTEGER":
         return "tsundere"
@@ -10,6 +9,7 @@ def get_var_type(var):
         return "kuudere"
     elif var.type == "LIST":
         return "harem"
+
 
 def get_exp_type(exp):
     if isinstance(exp, int):

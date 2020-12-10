@@ -10,12 +10,12 @@ from ast import (
     List_type,
     Variable_type,
     Variables_dict,
-    Booleans,
     Info_type,
     String_type,
     Conditional_level,
     If_type,
-    Else_type,
+    Func_type,
+    Func_dict,
     Print,
     Print_stack,
     Error_type,
@@ -37,6 +37,7 @@ class Parser:
         self.variables_dict = Variables_dict()  # stores all the variables
         self.print_stack = Print_stack()
         self.global_conditional_state = Conditional_level()
+        self.functions_dict = Func_dict()
 
     def parse(self):
         @self.pg.production("program : expression")
@@ -57,11 +58,18 @@ class Parser:
 
         #### GRAMMAR FOR PRINTING STUFF ####
 
-
         @self.pg.production("line_expression : PRINT expression LINE_END")
         def print_expression(p):
-            if self.global_conditional_state.state == True or self.global_conditional_state.state is None:
-                self.print_stack.append(p[1])
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                if self.functions_dict.in_function:
+                    exp = p[1]
+                    func = self.functions_dict.curr_function
+                    func.exec_print_exp(exp)
+                else:
+                    self.print_stack.append(p[1])
             return p[1]
 
         ######## GRAMMAR FOR BASIC ARITHMETIC CALCULATIONS ########
@@ -166,52 +174,69 @@ class Parser:
         @self.pg.production("expression : INDEX_W BAR expression BAR val_expression")
         @self.pg.production("expression : INDEX_W BAR expression BAR list_expression")
         def get_list_index(p):
-            p[4].is_index = True
-            p[4].index = p[2].eval()
-            return p[4]
+            #FIXME : prints the list when wants an index but works fine with vars
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                p[4].is_index = True
+                p[4].index = p[2].eval()
+                return p[4]
 
         @self.pg.production(
             "line_expression : APPEND expression TO val_expression LINE_END"
         )
         def add_to_list(p):
-            if p[-2].type == "LIST":
-                p[-2].value.append(p[1].eval())
-            else:
-                err = Error_type(
-                    "Waifu not suitable",
-                    f"you can add waifu only to your harem but '{p[-2].name}-chan' is not of harem type.",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
-            return p[-2]
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                if p[-2].type == "LIST":
+                    p[-2].value.append(p[1].eval())
+                else:
+                    err = Error_type(
+                        "Waifu not suitable",
+                        f"you can add waifu only to your harem but '{p[-2].name}-chan' is not of harem type.",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
+                return p[-2]
 
         @self.pg.production(
             "line_expression : REMOVE INDEX_W FROM val_expression LINE_END"
         )
         def remove_from_list(p):
-            if p[-2].type == "LIST":
-                p[-2].value.pop()
-            else:
-                err = Error_type(
-                    "Waifu not suitable",
-                    f"you can remove waifu only from your harem but '{p[-2].name}-chan' is not of harem type.",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
-            return p[-2]
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                if p[-2].type == "LIST":
+                    p[-2].value.pop()
+                else:
+                    err = Error_type(
+                        "Waifu not suitable",
+                        f"you can remove waifu only from your harem but '{p[-2].name}-chan' is not of harem type.",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
+                return p[-2]
 
         @self.pg.production("expression : C_LIST SIZE val_expression")
         def get_length_of_list(p):
-            if p[-1].type == "LIST":
-                length = len(p[-1].value)
-                return Integer(length)
-            else:
-                err = Error_type(
-                    "Waifu not suitable",
-                    f"waifu does not have size baa-aaka only harem has it's size but '{p[-1].name}-chan' is not harem type",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                if p[-1].type == "LIST":
+                    length = len(p[-1].value)
+                    return Integer(length)
+                else:
+                    err = Error_type(
+                        "Waifu not suitable",
+                        f"waifu does not have size baa-aaka only harem has it's size but '{p[-1].name}-chan' is not harem type",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
 
         #### GRAMMAR FOR VARIABLES ####
 
@@ -222,17 +247,21 @@ class Parser:
         # return the value of the variable
         @self.pg.production("val_expression : n_expression")
         def return_variable(p):
-            name = p[0].value
-            try:
-                return self.variables_dict.dict[name]
-            except Exception as e:
-                self.print_stack.append(
-                    Error_type(
-                        "WAIFU DOES NOT EXISTS",
-                        f"Baaaka you haven't created a waifu with name '{name}-chan'",
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                name = p[0].value
+                try:
+                    return self.variables_dict.dict[name]
+                except Exception as e:
+                    self.print_stack.append(
+                        Error_type(
+                            "WAIFU DOES NOT EXISTS",
+                            f"Baaaka you haven't created a waifu with name '{name}-chan'",
+                        )
                     )
-                )
-                raise ValueError()
+                    raise ValueError()
 
         # returns the name of the variable
         @self.pg.production("n_expression : VARIABLE")
@@ -246,6 +275,10 @@ class Parser:
 
         @self.pg.production("line_expression : NEW C_INTEGER n_expression v_expression")
         def variable_int(p):
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
                 name = p[2].value
                 value = p[-1].eval()
                 type = "INTEGER"
@@ -263,57 +296,69 @@ class Parser:
 
         @self.pg.production("line_expression : NEW C_FLOAT n_expression v_expression")
         def variable_float(p):
-            name = p[2].value
-            value = p[-1].eval()
-            type = "FLOAT"
-            try:
-                variable = Variable_type(name, type, value)
-            except ValueError:
-                err = Error_type(
-                    "waifu not suitable",
-                    f"Yandere waifus can only have floats but {p[-1].eval()} is not an float.",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
-                return err
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                name = p[2].value
+                value = p[-1].eval()
+                type = "FLOAT"
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type(
+                        "waifu not suitable",
+                        f"Yandere waifus can only have floats but {p[-1].eval()} is not an float.",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
+                    return err
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
         @self.pg.production("line_expression : NEW C_LIST n_expression v_expression")
         def variable_list(p):
-            name = p[2].value
-            value = p[-1].eval()
-            type = "LIST"
-            try:
-                variable = Variable_type(name, type, value)
-            except ValueError:
-                err = Error_type(
-                    "Harem not suitable",
-                    f"Harem can have only group of waifus, integers, floats, strings but "
-                    f"{value} doesn't satisfies any one of the group.",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                name = p[2].value
+                value = p[-1].eval()
+                type = "LIST"
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type(
+                        "Harem not suitable",
+                        f"Harem can have only group of waifus, integers, floats, strings but "
+                        f"{value} doesn't satisfies any one of the group.",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
 
-            self.variables_dict.add_variable(name, variable)
-            return variable
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
         @self.pg.production("line_expression : NEW C_BOOL n_expression v_expression")
         def variable_bool(p):
-            name = p[2].value
-            value = p[-1].eval()
-            type = "BOOL"
-            try:
-                variable = Variable_type(name, type, value)
-            except ValueError:
-                err = Error_type(
-                    "Ship not suitable",
-                    f"A Ship can only be kawai or baaka but {value} is none of them.",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                name = p[2].value
+                value = p[-1].eval()
+                type = "BOOL"
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type(
+                        "Ship not suitable",
+                        f"A Ship can only be kawai or baaka but {value} is none of them.",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
         # parses string
 
@@ -324,57 +369,69 @@ class Parser:
         # creates string
         @self.pg.production("line_expression : NEW C_STRING n_expression v_expression")
         def variables_string(p):
-            name = p[2].value
-            value = p[-1].eval()
-            type = "STRING"
-            try:
-                variable = Variable_type(name, type, value)
-            except ValueError:
-                err = Error_type(
-                    "waifu not suitable",
-                    f"Kuudere waifus can only have strings but {p[-1].eval()} is not a string.",
-                )
-                self.print_stack.append(err)
-                raise ValueError()
-            self.variables_dict.add_variable(name, variable)
-            return variable
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                name = p[2].value
+                value = p[-1].eval()
+                type = "STRING"
+                try:
+                    variable = Variable_type(name, type, value)
+                except ValueError:
+                    err = Error_type(
+                        "waifu not suitable",
+                        f"Kuudere waifus can only have strings but {p[-1].eval()} is not a string.",
+                    )
+                    self.print_stack.append(err)
+                    raise ValueError()
+                self.variables_dict.add_variable(name, variable)
+                return variable
 
         @self.pg.production("line_expression : INDEX_W val_expression v_expression")
         @self.pg.production(
             "line_expression : INDEX_W BAR expression BAR val_expression v_expression"
         )
         def change_variable_value(p):
-            if len(p) == 3:
-                var = p[1]
-                value = p[-1].eval()
-                var.value = value
-                var.type = get_exp_type(value)
-                if var.type == "LIST":
-                    var.is_index = False
-                    var.index = None
-                return var
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                if len(p) == 3:
+                    var = p[1]
+                    value = p[-1].eval()
+                    var.value = value
+                    var.type = get_exp_type(value)
+                    if var.type == "LIST":
+                        var.is_index = False
+                        var.index = None
+                    return var
 
-            elif len(p) == 6:
-                var = p[4]
-                index = p[2].eval()
-                value = p[-1].eval()
-                var.value[index] = value
-                return var
+                elif len(p) == 6:
+                    var = p[4]
+                    index = p[2].eval()
+                    value = p[-1].eval()
+                    var.value[index] = value
+                    return var
 
         @self.pg.production("expression : INDEX_W TYPE val_expression")
         def get_variable_type(p):
-            msg = None
-            if p[-1].type == "INTEGER":
-                msg = f"waifu {p[-1].name}-chan is a tsundere"
-            elif p[-1].type == "FLOAT":
-                msg = f"waifu {p[-1].name}-chan is a yandere"
-            elif p[-1].type == "LIST":
-                msg = f"{p[-1].name} is a harem with lots of waifus"
-            elif p[-1].type == "BOOL":
-                msg = f"{p[-1].name} is of type ship"
-            elif p[-1].type == "STRING":
-                msg = f"waifu {p[-1].name}-chan is a kuudere"
-            return Info_type(msg)
+            if (
+                self.global_conditional_state.state == True
+                or self.global_conditional_state.state is None
+            ):
+                msg = None
+                if p[-1].type == "INTEGER":
+                    msg = f"waifu {p[-1].name}-chan is a tsundere"
+                elif p[-1].type == "FLOAT":
+                    msg = f"waifu {p[-1].name}-chan is a yandere"
+                elif p[-1].type == "LIST":
+                    msg = f"{p[-1].name} is a harem with lots of waifus"
+                elif p[-1].type == "BOOL":
+                    msg = f"{p[-1].name} is of type ship"
+                elif p[-1].type == "STRING":
+                    msg = f"waifu {p[-1].name}-chan is a kuudere"
+                return Info_type(msg)
 
         @self.pg.production("expression : line_expression")
         def line_expression(p):
@@ -384,55 +441,79 @@ class Parser:
 
         #### GRAMMAR FOR CONDITIONALS ####
 
-        @self.pg.production("conditionals_expression : CHECK OPEN_PAREN expression BAR IS_EQUALS BAR expression CLOSE_PAREN C_OPEN_PAREN")
+        @self.pg.production(
+            "conditionals_expression : CHECK OPEN_PAREN expression BAR IS_EQUALS BAR expression CLOSE_PAREN C_OPEN_PAREN"
+        )
         def conditional_if_begin(p):
+            if p[2] is None:
+                val1 = None
+            else:
+                val1 = p[2].eval()
+            if p[6] is None:
+                val2 = None
+            else:
+                val2 = p[6].eval()
 
             if self.global_conditional_state.if_conditional is None:
-                conditional = If_type(p[2].eval(), p[6].eval())
+                conditional = If_type(val1, val2)
                 self.global_conditional_state.if_conditional = conditional
                 self.global_conditional_state.state = conditional.state
                 self.global_conditional_state.current_nested_level += 1
 
             elif self.global_conditional_state.if_conditional is not None:
                 conditional_state = Conditional_level()
-                conditional = If_type(p[2].eval(), p[6].eval())
+                conditional = If_type(val1, val2)
                 conditional_state.if_conditional = conditional
-                if self.global_conditional_state.state is True and conditional.state is True:
+                if (
+                    self.global_conditional_state.state is True
+                    and conditional.state is True
+                ):
                     conditional_state.state = True
                 else:
                     conditional_state.state = False
                 temp = self.global_conditional_state
                 self.global_conditional_state = conditional_state
                 self.global_conditional_state.parent_conditional = temp
-                self.global_conditional_state.current_nested_level = temp.current_nested_level + 1
+                self.global_conditional_state.current_nested_level = (
+                    temp.current_nested_level + 1
+                )
 
             return conditional
 
         @self.pg.production("conditionals_expression : ELSE C_OPEN_PAREN")
         def conditional_else_begin(p):
-            if self.global_conditional_state.parent_conditional is not None and self.global_conditional_state.parent_conditional.state is False:
+            if (
+                self.global_conditional_state.parent_conditional is not None
+                and self.global_conditional_state.parent_conditional.state is False
+            ):
                 self.global_conditional_state.state = False
                 return self.global_conditional_state
 
-            if self.global_conditional_state.if_conditional is not None and self.global_conditional_state.state == False:
+            if (
+                self.global_conditional_state.if_conditional is not None
+                and self.global_conditional_state.state == False
+            ):
                 self.global_conditional_state.state = True
-            elif self.global_conditional_state.if_conditional is not None and self.global_conditional_state.state == True:
+            elif (
+                self.global_conditional_state.if_conditional is not None
+                and self.global_conditional_state.state == True
+            ):
                 self.global_conditional_state.state = False
             elif self.global_conditional_state.parent_conditional.state is False:
                 self.global_conditional_state.state = False
             return self.global_conditional_state
-
 
         @self.pg.production("line_expression : e_expression C_CLOSE_PAREN")
         @self.pg.production("line_expression : e_expression C_CLOSE_PAREN LINE_END")
         def conditional_end(p):
             if len(p) == 3:
                 if self.global_conditional_state.parent_conditional is not None:
-                    self.global_conditional_state = self.global_conditional_state.parent_conditional
+                    self.global_conditional_state = (
+                        self.global_conditional_state.parent_conditional
+                    )
                 else:
                     self.global_conditional_state = Conditional_level()
             return self.global_conditional_state
-
 
         #### GRAMMAR for e_expressions ####
 
@@ -447,6 +528,26 @@ class Parser:
         @self.pg.production("f_expression : f_expression e_expression")
         def cvt_e_expression_to_f_expression(p):
             return p[1]
+
+        #### GRAMMAR for functions ####
+
+        @self.pg.production("func_expression : NEW C_FUNC n_expression C_FUNC_START")
+        def start_parsing_function(p):
+            new_func = Func_type(p[2].value, self.print_stack, self.variables_dict)
+            self.functions_dict.add_func(p[2].value, new_func)
+            return new_func
+        @self.pg.production(
+            "line_expression : func_expression e_expression C_FUNC_CLOSE LINE_END"
+        )
+        def end_parsing_function(p):
+            self.functions_dict.end_func()
+            return p[0]
+
+        @self.pg.production("line_expression : FUNC_EXEC C_FUNC n_expression LINE_END")
+        def exec_function(p):
+            func = self.functions_dict.get_func(p[2].value)
+            func.eval()
+            return p[2]
 
         ######## GRAMMAR FOR EXIT ########
 

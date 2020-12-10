@@ -1,6 +1,7 @@
 from colorama import Fore, Back, Style
 
-class Integer():
+
+class Integer:
     def __init__(self, value):
         self.value = value
 
@@ -8,7 +9,7 @@ class Integer():
         return int(self.value)
 
 
-class Float():
+class Float:
     def __init__(self, value):
         self.value = value
 
@@ -16,7 +17,7 @@ class Float():
         return float(self.value)
 
 
-class String_type():
+class String_type:
     def __init__(self, value):
         self.value = value
 
@@ -24,7 +25,7 @@ class String_type():
         return self.value
 
 
-class BinaryOp():
+class BinaryOp:
     def __init__(self, left, right):
         self.left = left
         self.right = right
@@ -48,13 +49,15 @@ class Multiply(BinaryOp):
 class Divide(BinaryOp):
     def eval(self):
         if self.right.eval() == 0:
-            print("Naaani? you were trying to divide by 0."
-                  "B-Baaaaaaka that's not possible")
+            print(
+                "Naaani? you were trying to divide by 0."
+                "B-Baaaaaaka that's not possible"
+            )
         return self.left.eval() / self.right.eval()
 
 
 # class for lists
-class List_type():
+class List_type:
     def __init__(self):
         self.value = []
         self.is_index = False
@@ -70,14 +73,15 @@ class List_type():
         return self.value[self.index]
 
 
-class Print():
+class Print:
     def __init__(self, value):
         self.value = value
 
     def eval(self):
         return self.value.eval()
 
-class Print_stack():
+
+class Print_stack:
     def __init__(self):
         self.stack = []
         self.info_terms = []
@@ -109,8 +113,9 @@ class Print_stack():
             obj = val.eval()
         self.stack.append(obj)
 
+
 # class for variable
-class Variable_type():
+class Variable_type:
     def __init__(self, name, type, value):
         self.name = name
         self.value = value
@@ -144,8 +149,9 @@ class Variable_type():
             return self.value[self.index]
         return self.value
 
+
 # class to store all the variables
-class Variables_dict():
+class Variables_dict:
     def __init__(self):
         self.dict = {}
 
@@ -155,16 +161,19 @@ class Variables_dict():
     def get_variable(self, name: str):
         return self.dict[name]
 
-class Booleans():
+
+class Booleans:
     def __init__(self, value):
         self.value = value
 
     def eval(self):
         return self.value
 
+
 # class for conditionals
 
-class Conditional_level():
+
+class Conditional_level:
     def __init__(self):
         self.current_nested_level = 0
         self.if_conditional = None
@@ -182,30 +191,94 @@ class Conditional_level():
         return self.next_conditional
 
 
-class If_type():
+class If_type:
     def __init__(self, val1, val2):
         self.val1 = val1
         self.val2 = val2
         self.state = True if self.val1 == self.val2 else False
 
-    def eval():
+    def eval(self):
         return self.state
 
 
-class Else_type():
+class Else_type:
     def __init__(self, state):
         self.state = state
 
-    def eval():
+    def eval(self):
         return self.state
 
-class Info_type():
-    def __init__(self, string : str):
+
+class Info_type:
+    def __init__(self, string: str):
         self.info = string
 
     def eval(self) -> str:
         return self.info
 
+
+#### classes for functions ####
+
+
+class Function_state:
+    def __init__(self, print_stack, variables_dict):
+        self.print_stack = print_stack
+        self.variables = variables_dict
+        self.expressions_buffer = []
+
+    def exec_print_exp(self, exp):
+        def exec():
+            self.print_stack.append(exp)
+
+        self.expressions_buffer.append(exec)
+        return exec
+
+    def exec_get_list_index(self, list_name, index):
+        def exec():
+            list_name.is_index = True
+            list_name.index = index.eval()
+        self.expressions_buffer.append(exec)
+        return exec
+
+
+class Func_type(Function_state):
+    def __init__(self, name, print_stack, variables_dict):
+        super().__init__(print_stack, variables_dict)
+        self.name = name
+
+    def eval(self):
+        for exp in self.expressions_buffer:
+            exp()
+
+
+class Func_dict:
+    def __init__(self):
+        self.dict = {}
+        self.in_function = False
+        self.curr_function_name = None
+
+    def get_func(self, name):
+        return self.dict[name]
+
+    def add_func(self, name, val: Func_type):
+        self.dict[name] = val
+        self.curr_function_name = name
+        self.in_function = True
+
+    def end_func(self):
+        self.curr_function_name = None
+        self.in_function = False
+
+    def add_exp(self, exp):
+        func = self.dict[self.curr_function_name]
+        func.expressions_buffer.append(exp)
+
+    @property
+    def curr_function(self):
+        return self.dict[self.curr_function_name]
+
+
+#### classes for error handling ####
 class Error_type:
     def __init__(self, error_type, error_value):
         self.error_type = error_type
@@ -217,5 +290,7 @@ class Error_type:
 
 class Exit:
     def eval(self):
-        print("What did you thought that i would get upset? It's not that i like you b-baaka. *Hmph*")
+        print(
+            "What did you thought that i would get upset? It's not that i like you b-baaka. *Hmph*"
+        )
         quit()
